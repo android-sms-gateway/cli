@@ -45,7 +45,7 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 			builder.WriteString("\n\t")
 			builder.WriteString(k)
 			builder.WriteString("\t")
-			builder.WriteString(v.Format(time.DateTime))
+			builder.WriteString(v.Local().Format(time.DateTime))
 		}
 	}
 

@@ -38,9 +38,10 @@ var send = &cli.Command{
 			DefaultText: "unlimited",
 		},
 		&cli.TimestampFlag{
-			Name:   "validUntil",
-			Usage:  "Valid until",
-			Layout: time.DateTime,
+			Name:     "validUntil",
+			Usage:    "Valid until",
+			Layout:   time.DateTime,
+			Timezone: time.Local,
 		},
 	},
 	Before: func(c *cli.Context) error {
