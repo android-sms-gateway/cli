@@ -1,0 +1,10 @@
+FROM alpine:latest  
+
+# Set the Current Working Directory inside the container
+WORKDIR /app
+
+# Copy the Pre-built binary file from GoReleaser
+COPY smsgate .
+
+# Command to run the executable
+ENTRYPOINT ["./smsgate"]
