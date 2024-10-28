@@ -40,19 +40,23 @@ archives:
       - goos: windows
         format: zip
 
-# dockers:
-#   - image_templates:
-#       - "capcom6/labeled-storage:{{ .Tag }}"
-#       - "capcom6/labeled-storage:v{{ .Major }}"
-#       - "capcom6/labeled-storage:v{{ .Major }}.{{ .Minor }}"
-#       - "capcom6/labeled-storage:latest"
-#     dockerfile: Dockerfile
-#     build_flag_templates:
-#       - "--label=org.opencontainers.image.created={{ .Date }}"
-#       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
-#       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
-#       - "--label=org.opencontainers.image.version={{ .Version }}"
-#     skip_push: false
+dockers:
+  - image_templates:
+      - "smsgate/cli:{{ .Tag }}"
+      - "smsgate/cli:v{{ .Major }}"
+      - "smsgate/cli:v{{ .Major }}.{{ .Minor }}"
+      - "smsgate/cli:latest"
+      - ghcr.io/android-sms-gateway/cli:{{ .Tag }}
+      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}
+      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}
+      - ghcr.io/android-sms-gateway/cli:latest
+    dockerfile: Dockerfile
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+    skip_push: false
 
 changelog:
   sort: asc
