@@ -26,7 +26,7 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:     "sms-gate-cli",
+		Name:     "smsgate",
 		Usage:    "CLI interface for working with SMS Gateway for Android™",
 		Version:  version,
 		Commands: make([]*cli.Command, 0, len(messages.Commands)+len(webhooks.Commands)),
