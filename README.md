@@ -110,7 +110,7 @@ Options:
 - `--id value`: Message ID (optional, generated if not specified)
 - `--phones value, -p value, --phone value`: Phone numbers (can be specified multiple times or comma-separated)
 - `--sim value`: SIM card index (1-3) (default: 0)
-- `--ttl value`: Time to live (default: unlimited)
+- `--ttl value`: Time to live as duration string like "1h30m" (default: unlimited)
 - `--validUntil value`: Valid until (format: YYYY-MM-DD HH:MM:SS in local timezone)
 
 #### Get Message Status
