@@ -5,6 +5,8 @@
 
 version: 2
 
+project_name: smsgate
+
 before:
   hooks:
     # You may remove this if you don't use go modules.
