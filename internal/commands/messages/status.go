@@ -1,7 +1,7 @@
 package messages
 
 import (
-	"log"
+	"fmt"
 
 	"github.com/android-sms-gateway/cli/internal/core/codes"
 	"github.com/android-sms-gateway/cli/internal/utils/metadata"
@@ -33,7 +33,7 @@ var status = &cli.Command{
 		if err != nil {
 			return cli.Exit(err.Error(), codes.OutputError)
 		}
-		log.Println(s)
+		fmt.Println(s)
 
 		return nil
 	},

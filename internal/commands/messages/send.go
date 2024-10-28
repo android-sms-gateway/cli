@@ -24,7 +24,7 @@ var send = &cli.Command{
 		},
 		&cli.StringSliceFlag{
 			Name:     "phones",
-			Aliases:  []string{"p"},
+			Aliases:  []string{"p", "phone"},
 			Usage:    "Phone numbers",
 			Required: true,
 		},

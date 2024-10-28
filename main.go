@@ -1,13 +1,14 @@
 package main
 
 import (
-	"log"
+	"fmt"
 	"os"
 
 	"github.com/android-sms-gateway/cli/internal/commands/messages"
 	"github.com/android-sms-gateway/cli/internal/commands/webhooks"
 	"github.com/android-sms-gateway/cli/internal/config"
 	"github.com/android-sms-gateway/cli/internal/core/client"
+	"github.com/android-sms-gateway/cli/internal/core/codes"
 	"github.com/android-sms-gateway/cli/internal/core/output"
 	"github.com/android-sms-gateway/cli/internal/utils/metadata"
 	"github.com/joho/godotenv"
@@ -20,7 +21,8 @@ var (
 
 func main() {
 	if err := godotenv.Load(); err != nil && !os.IsNotExist(err) {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Error loading .env file: %v\n", err)
+		os.Exit(codes.ParamsError)
 	}
 
 	app := &cli.App{
@@ -92,6 +94,7 @@ func main() {
 	// app.Commands = append(app.Commands, webhooks.Commands...)
 
 	if err := app.Run(os.Args); err != nil {
-		log.Fatal(err)
+		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
+		os.Exit(codes.ParamsError)
 	}
 }
