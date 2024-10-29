@@ -33,22 +33,6 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 	builder.WriteString("\nIsEncrypted: ")
 	builder.WriteString(boolToString(src.IsEncrypted))
 
-	if len(src.States) > 0 {
-		builder.WriteString("\nStates: ")
-
-		for _, k := range messageStates {
-			v, ok := src.States[k]
-			if !ok {
-				continue
-			}
-
-			builder.WriteString("\n\t")
-			builder.WriteString(k)
-			builder.WriteString("\t")
-			builder.WriteString(v.Local().Format(time.DateTime))
-		}
-	}
-
 	builder.WriteString("\nRecipients: ")
 
 	for _, r := range src.Recipients {
@@ -61,6 +45,22 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 			builder.WriteString(*r.Error)
 		} else {
 			builder.WriteString("")
+		}
+	}
+
+	if len(src.States) > 0 {
+		builder.WriteString("\nStates: ")
+
+		for _, k := range messageStates {
+			v, ok := src.States[k]
+			if !ok {
+				continue
+			}
+
+			builder.WriteString("\n\t")
+			builder.WriteString(k)
+			builder.WriteString("\t")
+			builder.WriteString(v.Local().Format(time.RFC3339))
 		}
 	}
 

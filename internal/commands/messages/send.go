@@ -40,7 +40,7 @@ var send = &cli.Command{
 		&cli.TimestampFlag{
 			Name:     "validUntil",
 			Usage:    "Valid until",
-			Layout:   time.DateTime,
+			Layout:   time.RFC3339,
 			Timezone: time.Local,
 		},
 	},
