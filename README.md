@@ -12,18 +12,18 @@ A command-line interface for working with SMS Gateway for Android.
     - [Option 1: Download from GitHub Releases](#option-1-download-from-github-releases)
     - [Option 2: Install using Go](#option-2-install-using-go)
   - [Configuration](#configuration)
-    - [Environment Variables](#environment-variables)
-    - [Command-line Flags](#command-line-flags)
-      - [Output Formats](#output-formats)
+    - [Available Options](#available-options)
+    - [Output Formats](#output-formats)
   - [Usage](#usage)
     - [Commands](#commands)
-    - [Send Message](#send-message)
-      - [Get Message Status](#get-message-status)
-  - [Examples](#examples)
+      - [Send a message](#send-a-message)
+      - [Get the status of a sent message](#get-the-status-of-a-sent-message)
+  - [Usage Examples](#usage-examples)
     - [Output formats](#output-formats-1)
       - [Text](#text)
       - [JSON](#json)
       - [Raw](#raw)
+  - [Exit codes](#exit-codes)
   - [Support](#support)
   - [Contributing](#contributing)
   - [License](#license)
@@ -35,7 +35,7 @@ You can install the SMS Gateway CLI in two ways:
 
 ### Option 1: Download from GitHub Releases
 
-1. Go to the [Releases page](https://github.com/android-sms-gateway/cli/releases) of this repository.
+1. Go to the [Releases page](https://github.com/android-sms-gateway/cli/releases/latest) of this repository.
 2. Download the appropriate binary for your operating system and architecture.
 3. Rename the downloaded file to `smsgate` (or `smsgate.exe` for Windows).
 4. Move the binary to a directory in your system's PATH.
@@ -63,30 +63,26 @@ After installation, you can run the CLI tool using the `smsgate` command.
 
 ## Configuration
 
-The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file to set these variables.
+The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables.
 
-### Environment Variables
+### Available Options
 
-All environment variables are prefixed with `ASG_`:
+| Option             | Env Var        | Description      | Default value                          |
+| ------------------ | -------------- | ---------------- | -------------------------------------- |
+| `--endpoint`, `-e` | `ASG_ENDPOINT` | The endpoint URL | `https://api.sms-gate.app/3rdparty/v1` |
+| `--username`, `-u` | `ASG_USERNAME` | Your username    | **required**                           |
+| `--password`, `-p` | `ASG_PASSWORD` | Your password    | **required**                           |
+| `--format`, `-f`   | n/a            | Output format    | `text`                                 |
 
-- `ASG_ENDPOINT`: The endpoint URL (default: `https://api.sms-gate.app/3rdparty/v1`)
-- `ASG_USERNAME`: Your username (required)
-- `ASG_PASSWORD`: Your password (required)
-
-### Command-line Flags
-
-- `--endpoint`, `-e`: Endpoint URL
-- `--username`, `-u`: Username
-- `--password`, `-p`: Password
-- `--format`, `-f`: Output format (supported: text, json, raw; default: text)
-
-#### Output Formats
+### Output Formats
 
 The CLI supports three output formats:
 
 1. `text`: Human-readable text output (default)
 2. `json`: Pretty printed JSON-formatted output
 3. `raw`: One-line JSON-formatted output
+
+Please note that when the exit code is not `0`, the error description is printed to stderr without any formatting.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -98,44 +94,63 @@ smsgate [global options] command [command options] [arguments...]
 
 ### Commands
 
-### Send Message
+The CLI supports the following commands:
 
-Send an SMS message.
+- `send` - send a message with single or multiple recipients
+- `status` - get the status of a sent message by message ID
 
+#### Send a message
+
+Syntax:
 ```bash
-smsgate send [options] Message content
+smsgate send [options] 'Message content'
 ```
 
-Options:
-- `--id value`: Message ID (optional, generated if not specified)
-- `--phones value, -p value, --phone value`: Phone numbers (can be specified multiple times or comma-separated)
-- `--sim value`: SIM card index (1-3) (default: 0)
-- `--ttl value`: Time to live as duration string like "1h30m" (default: unlimited)
-- `--validUntil value`: Valid until (format: YYYY-MM-DD HH:MM:SS in local timezone)
+| Option                      | Description                                                                                | Default value | Example                 |
+| --------------------------- | ------------------------------------------------------------------------------------------ | ------------- | ----------------------- |
+| `--id`                      | Message ID, will be generated if not provided                                              | empty         | `zXDYfTmTVf3iMd16zzdBj` |
+| `--phone`, `--phones`, `-p` | Phone number, can be used multiple times or with comma-separated values                    | **required**  | `+19162255887`          |
+| `--sim`                     | SIM card slot number, if empty, the default SIM card will be used                          | empty         | `2`                     |
+| `--ttl`                     | Time-to-live (TTL), if empty, the message will not expire<br>Conflicts with `--validUntil` | empty         | `1h30m`                 |
+| `--validUntil`              | Valid until, if empty, the message will not expire<br>Conflicts with `--ttl`               | empty         | `2024-12-31 23:59:59`   |
 
-#### Get Message Status
+#### Get the status of a sent message
 
-Retrieve the status of a sent message.
-
+Syntax:
 ```bash
-smsgate status [options] Message ID
+smsgate status 'Message ID'
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Examples
+## Usage Examples
+
+For security reasons, it is recommended to pass credentials using environment variables or a `.env` file.
 
 ```bash
 # Send a message
 smsgate send --phone '+19162255887' 'Hello, Dr. Turk!'
 
 # Send a message to multiple numbers
-smsgate send --phone '+19162255887' --phone '+19162255888' 'Hello, Dr. Turk!'
+smsgate send --phone '+19162255887' --phone '+19162255888' 'Hello, doctors!'
 # or
-smsgate send --phones '+19162255887,+19162255888' 'Hello, Dr. Turk!'
+smsgate send --phones '+19162255887,+19162255888' 'Hello, doctors!'
 
 # Get the status of a sent message
 smsgate status zXDYfTmTVf3iMd16zzdBj
+```
+
+Credentials can also be passed via CLI options:
+
+```bash
+# Pass credentials by options
+smsgate send -u <username> -p <password> --phone '+19162255887' 'Hello, Dr. Turk!'
+```
+
+If you prefer not to install the CLI tool locally, you can use Docker to run it:
+
+```bash
+docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli send --phone '+19162255887' 'Hello, Dr. Turk!'
 ```
 
 ### Output formats
@@ -179,6 +194,17 @@ Recipients:
 ```json
 {"id":"zXDYfTmTVf3iMd16zzdBj","state":"Pending","isHashed":false,"isEncrypted":false,"recipients":[{"phoneNumber":"+19162255887","state":"Pending"},{"phoneNumber":"+19162255888","state":"Pending"}],"states":{}}
 ```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Exit codes
+
+The CLI uses exit codes to indicate the outcome of operations:
+
+- `0`: success
+- `1`: invalid options or arguments
+- `2`: server request error
+- `3`: output formatting error
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
