@@ -18,12 +18,9 @@ A command-line interface for working with SMS Gateway for Android.
     - [Commands](#commands)
       - [Send a message](#send-a-message)
       - [Get the status of a sent message](#get-the-status-of-a-sent-message)
-  - [Usage Examples](#usage-examples)
-    - [Output formats](#output-formats-1)
-      - [Text](#text)
-      - [JSON](#json)
-      - [Raw](#raw)
-  - [Exit codes](#exit-codes)
+    - [Exit codes](#exit-codes)
+    - [Examples](#examples)
+      - [Output formats](#output-formats-1)
   - [Support](#support)
   - [Contributing](#contributing)
   - [License](#license)
@@ -121,9 +118,16 @@ Syntax:
 smsgate status 'Message ID'
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+### Exit codes
 
-## Usage Examples
+The CLI uses exit codes to indicate the outcome of operations:
+
+- `0`: success
+- `1`: invalid options or arguments
+- `2`: server request error
+- `3`: output formatting error
+
+### Examples
 
 For security reasons, it is recommended to pass credentials using environment variables or a `.env` file.
 
@@ -153,9 +157,9 @@ If you prefer not to install the CLI tool locally, you can use Docker to run it:
 docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli send --phone '+19162255887' 'Hello, Dr. Turk!'
 ```
 
-### Output formats
+#### Output formats
 
-#### Text
+**Text**
 
 ```
 ID: zXDYfTmTVf3iMd16zzdBj
@@ -167,7 +171,7 @@ Recipients:
         +19162255888    Pending
 ```
 
-#### JSON
+**JSON**
 
 ```json
 {
@@ -189,22 +193,11 @@ Recipients:
 }
 ```
 
-#### Raw
+**Raw**
 
 ```json
 {"id":"zXDYfTmTVf3iMd16zzdBj","state":"Pending","isHashed":false,"isEncrypted":false,"recipients":[{"phoneNumber":"+19162255887","state":"Pending"},{"phoneNumber":"+19162255888","state":"Pending"}],"states":{}}
 ```
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Exit codes
-
-The CLI uses exit codes to indicate the outcome of operations:
-
-- `0`: success
-- `1`: invalid options or arguments
-- `2`: server request error
-- `3`: output formatting error
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
