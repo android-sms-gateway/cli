@@ -109,7 +109,7 @@ smsgate send [options] 'Message content'
 | `--phone`, `--phones`, `-p` | Phone number, can be used multiple times or with comma-separated values                    | **required**  | `+19162255887`          |
 | `--sim`                     | SIM card slot number, if empty, the default SIM card will be used                          | empty         | `2`                     |
 | `--ttl`                     | Time-to-live (TTL), if empty, the message will not expire<br>Conflicts with `--validUntil` | empty         | `1h30m`                 |
-| `--validUntil`              | Valid until, if empty, the message will not expire<br>Conflicts with `--ttl`               | empty         | `2024-12-31 23:59:59`   |
+| `--validUntil`              | Valid until, if empty, the message will not expire<br>Conflicts with `--ttl`               | empty         | `2024-12-31T23:59:59Z`  |
 
 #### Get the status of a sent message
 
