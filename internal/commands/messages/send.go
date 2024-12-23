@@ -25,21 +25,22 @@ var send = &cli.Command{
 		&cli.StringSliceFlag{
 			Name:     "phones",
 			Aliases:  []string{"p", "phone"},
-			Usage:    "Phone numbers",
+			Usage:    "Phone numbers (E.164 format, e.g. +19162255887)",
 			Required: true,
 		},
 		&cli.IntFlag{
-			Name:  "sim",
-			Usage: "SIM card index (1-3)",
+			Name:    "sim",
+			Aliases: []string{"simNumber"},
+			Usage:   "SIM card index (one-based index, e.g. 1)",
 		},
 		&cli.DurationFlag{
 			Name:        "ttl",
-			Usage:       "Time to live",
+			Usage:       "Time to live (duration, e.g. 1h30m)",
 			DefaultText: "unlimited",
 		},
 		&cli.TimestampFlag{
 			Name:     "validUntil",
-			Usage:    "Valid until",
+			Usage:    "Valid until (RFC3339 format, e.g. 2006-01-02T15:04:05Z07:00)",
 			Layout:   time.RFC3339,
 			Timezone: time.Local,
 		},
