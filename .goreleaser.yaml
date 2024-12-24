@@ -58,11 +58,6 @@ dockers:
       - "--label=org.opencontainers.image.version={{ .Version }}"
     skip_push: false
 
-announce:
-  discord:
-    # Whether its enabled or not.
-    enabled: true
-
 changelog:
   sort: asc
   filters:
