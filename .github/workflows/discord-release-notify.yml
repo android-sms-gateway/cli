@@ -10,13 +10,13 @@ jobs:
     if: github.event.release.prerelease == false
     steps:
       - name: Send Discord Notification
-        env:
-          DISCORD_WEBHOOK: ${{ secrets.DISCORD_WEBHOOK }}
-        uses: Ilshidur/action-discord@0c4b27844ba47cb1c7bee539c8eead5284ce9fa9
+        uses: capcom6/discord-webhook@3a447f4ed76c79ed32fb073d705bda1cd45119e6
         with:
-          args: |
-            🎉 New Release of [${{ github.event.repository.name }}](${{ github.event.repository.homepageUrl }}): **${{ github.event.release.name }}**
+          webhook-url: ${{ secrets.DISCORD_WEBHOOK }}
+          content: |
+            🎉 New Release of [${{ github.event.repository.name }}](${{ github.event.repository.html_url }}): **${{ github.event.release.name }}**
 
             ${{ github.event.release.body }}
 
             📦 Download: ${{ github.event.release.html_url }}
+          flags: 4 # 4 = SUPPRESS_EMBEDS
