@@ -3,7 +3,8 @@ module github.com/android-sms-gateway/cli
 go 1.23.2
 
 require (
-	github.com/android-sms-gateway/client-go v1.1.0
+	github.com/android-sms-gateway/client-go v1.4.0
+	github.com/capcom6/go-helpers v0.0.0-20240521035631-865ee2879fa3
 	github.com/joho/godotenv v1.5.1
 	github.com/urfave/cli/v2 v2.27.5
 )

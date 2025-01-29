@@ -66,3 +66,51 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 
 	return builder.String(), nil
 }
+
+// Webhook formats a single smsgateway.Webhook into a string representation.
+// The output includes the ID, Event, and URL of the webhook.
+func (*TextOutput) Webhook(src smsgateway.Webhook) (string, error) {
+	builder := strings.Builder{}
+	builder.WriteString("ID: ")
+	builder.WriteString(src.ID)
+	builder.WriteString("\nEvent: ")
+	builder.WriteString(src.Event)
+	builder.WriteString("\nURL: ")
+	builder.WriteString(src.URL)
+
+	return builder.String(), nil
+}
+
+// Webhooks formats a slice of smsgateway.Webhook into a single string representation.
+// Each webhook's string representation is separated by "---".
+// Returns the formatted string and any error encountered during formatting.
+func (o *TextOutput) Webhooks(src []smsgateway.Webhook) (string, error) {
+	if len(src) == 0 {
+		return "Empty result", nil
+	}
+
+	builder := strings.Builder{}
+
+	for i, w := range src {
+		b, err := o.Webhook(w)
+		if err != nil {
+			return "", err
+		}
+		builder.WriteString(b)
+
+		if i == len(src)-1 {
+			continue
+		}
+
+		builder.WriteString("\n---\n")
+	}
+
+	return builder.String(), nil
+}
+
+// Success returns a string indicating success.
+func (*TextOutput) Success() (string, error) {
+	return "Success", nil
+}
+
+var _ Renderer = (*TextOutput)(nil)

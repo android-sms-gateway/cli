@@ -1,7 +1,10 @@
 package webhooks
 
 import (
+	"fmt"
+
 	"github.com/android-sms-gateway/cli/internal/core/codes"
+	"github.com/android-sms-gateway/cli/internal/utils/metadata"
 	"github.com/urfave/cli/v2"
 )
 
@@ -18,9 +21,19 @@ var delete = &cli.Command{
 			return cli.Exit("ID is empty", codes.ParamsError)
 		}
 
-		// client := metadata.GetClient(c.App.Metadata)
-		// renderer := metadata.GetRenderer(c.App.Metadata)
+		client := metadata.GetClient(c.App.Metadata)
+		renderer := metadata.GetRenderer(c.App.Metadata)
 
-		return cli.Exit("Not implemented", codes.ParamsError)
+		err := client.DeleteWebhook(c.Context, id)
+		if err != nil {
+			return cli.Exit(err.Error(), codes.ClientError)
+		}
+
+		b, err := renderer.Success()
+		if err != nil {
+			return cli.Exit(err.Error(), codes.OutputError)
+		}
+		fmt.Println(b)
+		return nil
 	},
 }

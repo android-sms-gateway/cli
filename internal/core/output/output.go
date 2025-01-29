@@ -16,6 +16,9 @@ const (
 
 type Renderer interface {
 	MessageState(src smsgateway.MessageState) (string, error)
+	Webhook(src smsgateway.Webhook) (string, error)
+	Webhooks(src []smsgateway.Webhook) (string, error)
+	Success() (string, error)
 }
 
 var ErrUnsupportedFormat = errors.New("unsupported format")

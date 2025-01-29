@@ -91,7 +91,7 @@ func main() {
 	}
 
 	app.Commands = append(app.Commands, messages.Commands...)
-	// app.Commands = append(app.Commands, webhooks.Commands...)
+	app.Commands = append(app.Commands, webhooks.Commands...)
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)
