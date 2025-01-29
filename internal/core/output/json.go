@@ -25,3 +25,17 @@ func NewJSONOutput() *JSONOutput {
 func (o *JSONOutput) MessageState(src smsgateway.MessageState) (string, error) {
 	return o.marshaler(src)
 }
+
+func (o *JSONOutput) Webhook(src smsgateway.Webhook) (string, error) {
+	return o.marshaler(src)
+}
+
+func (o *JSONOutput) Webhooks(src []smsgateway.Webhook) (string, error) {
+	return o.marshaler(src)
+}
+
+func (o *JSONOutput) Success() (string, error) {
+	return "", nil
+}
+
+var _ Renderer = (*JSONOutput)(nil)

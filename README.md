@@ -2,7 +2,7 @@
 
 # SMS Gateway for Android™ CLI
 
-A command-line interface for working with SMS Gateway for Android.
+A command-line interface for interacting with the SMS Gateway for Android API.
 
 ## Table of Contents
 
@@ -16,8 +16,6 @@ A command-line interface for working with SMS Gateway for Android.
     - [Output Formats](#output-formats)
   - [Usage](#usage)
     - [Commands](#commands)
-      - [Send a message](#send-a-message)
-      - [Get the status of a sent message](#get-the-status-of-a-sent-message)
     - [Exit codes](#exit-codes)
     - [Examples](#examples)
       - [Output formats](#output-formats-1)
@@ -91,32 +89,14 @@ smsgate [global options] command [command options] [arguments...]
 
 ### Commands
 
-The CLI supports the following commands:
+The CLI offers two main groups of commands:
 
-- `send` - send a message with single or multiple recipients
-- `status` - get the status of a sent message by message ID
+- **Messages**: Commands for sending messages and checking their status.
+- **Webhooks**: Commands for managing webhooks, including creating, updating, and deleting them.
 
-#### Send a message
-
-Syntax:
-```bash
-smsgate send [options] 'Message content'
-```
-
-| Option                      | Description                                                                                | Default value | Example                 |
-| --------------------------- | ------------------------------------------------------------------------------------------ | ------------- | ----------------------- |
-| `--id`                      | Message ID, will be generated if not provided                                              | empty         | `zXDYfTmTVf3iMd16zzdBj` |
-| `--phone`, `--phones`, `-p` | Phone number, can be used multiple times or with comma-separated values, E.164 format      | **required**  | `+19162255887`          |
-| `--sim`, `--simNumber`      | One-based SIM card slot number, if empty, the default SIM card will be used                | empty         | `2`                     |
-| `--ttl`                     | Time-to-live (TTL), if empty, the message will not expire<br>Conflicts with `--validUntil` | empty         | `1h30m`                 |
-| `--validUntil`              | Valid until, if empty, the message will not expire<br>Conflicts with `--ttl`               | empty         | `2024-12-31T23:59:59Z`  |
-
-#### Get the status of a sent message
-
-Syntax:
-```bash
-smsgate status 'Message ID'
-```
+For a complete list of available commands, you can:
+- Run `smsgate help` or `smsgate --help` in your terminal.
+- Visit the official documentation at [docs.sms-gate.app](https://docs.sms-gate.app/integration/cli/#commands).
 
 ### Exit codes
 
