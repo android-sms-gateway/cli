@@ -5,4 +5,5 @@ const (
 	ParamsError
 	ClientError
 	OutputError
+	InternalError
 )

@@ -5,6 +5,7 @@ WORKDIR /app
 
 # Copy the Pre-built binary file from GoReleaser
 COPY smsgate .
+COPY smsgate-ca .
 
 # Command to run the executable
 ENTRYPOINT ["./smsgate"]
