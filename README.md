@@ -4,6 +4,8 @@
 
 A command-line interface for interacting with the SMS Gateway for Android API.
 
+There are two CLI tools in this repository: `smsgate` and `smsgate-ca`. The first one is for SMS Gateway for Android itself, and the second one is for the Certificate Authority.
+
 ## Table of Contents
 
 - [SMS Gateway for Android™ CLI](#sms-gateway-for-android-cli)
