@@ -15,7 +15,8 @@ before:
     - go generate ./...
 
 builds:
-  - id: smsgate
+  - &default
+    id: smsgate
     main: ./cmd/smsgate
     binary: smsgate
     env:
@@ -27,17 +28,10 @@ builds:
     ldflags:
       - -s -w -X main.version={{.Version}}
 
-  - id: smsgate-ca
+  - <<: *default
+    id: smsgate-ca
     main: ./cmd/smsgate-ca
     binary: smsgate-ca
-    env:
-      - CGO_ENABLED=0
-    goos:
-      - linux
-      - windows
-      - darwin
-    ldflags:
-      - -s -w -X main.version={{.Version}}
 
 archives:
   - formats: ["tar.gz"]
