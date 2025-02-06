@@ -5,5 +5,5 @@ import (
 )
 
 var Commands = []*cli.Command{
-	webhooks,
+	csr,
 }

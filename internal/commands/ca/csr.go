@@ -20,7 +20,7 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var webhooks = &cli.Command{
+var csr = &cli.Command{
 	Name:      "webhooks",
 	Aliases:   []string{"wh"},
 	Usage:     "Issue a new certificate for receiving webhooks to local IP address",
