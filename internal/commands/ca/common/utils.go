@@ -1,4 +1,4 @@
-package ca
+package common
 
 import (
 	"crypto/ecdsa"
@@ -41,7 +41,7 @@ func newServerCertificateRequestPEM(template x509.CertificateRequest, priv *ecds
 	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes}), nil
 }
 
-func requestCertificate(c *cli.Context, template x509.CertificateRequest) error {
+func requestCertificate(c *cli.Context, typ ca.CSRType, template x509.CertificateRequest) error {
 	log.Println("Generating private key...")
 	priv, err := ecdsa.GenerateKey(elliptic.P256(), rand.Reader)
 	if err != nil {
@@ -68,6 +68,7 @@ func requestCertificate(c *cli.Context, template x509.CertificateRequest) error 
 	client := metadata.GetCAClient(c.App.Metadata)
 
 	resp, err := client.PostCSR(c.Context, ca.PostCSRRequest{
+		Type:    typ,
 		Content: string(csrPemBytes),
 	})
 	if err != nil {
