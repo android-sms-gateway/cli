@@ -6,4 +6,5 @@ import (
 
 var Commands = []*cli.Command{
 	webhooks,
+	private,
 }
