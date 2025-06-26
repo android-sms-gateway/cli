@@ -33,6 +33,16 @@ var send = &cli.Command{
 			Aliases: []string{"simNumber"},
 			Usage:   "SIM card index (one-based index, e.g. 1)",
 		},
+		&cli.BoolFlag{
+			Name:  "deliveryReport",
+			Usage: "Enable delivery report (default: true)",
+			Value: true,
+		},
+		&cli.IntFlag{
+			Name:  "priority",
+			Usage: "Priority, use >= 100 to bypass all limits and delays (-128 to 127, default: 0)",
+			Value: 0,
+		},
 		&cli.DurationFlag{
 			Name:        "ttl",
 			Usage:       "Time to live (duration, e.g. 1h30m)",
@@ -49,7 +59,12 @@ var send = &cli.Command{
 		ttl := c.Duration("ttl")
 		validUntil := c.Timestamp("validUntil")
 		if ttl > 0 && validUntil != nil {
-			return cli.Exit("TTL and Valid Until flags are mutually exclusive", 1)
+			return cli.Exit("TTL and Valid Until flags are mutually exclusive", codes.ParamsError)
+		}
+
+		priority := c.Int("priority")
+		if priority < int(smsgateway.PriorityMinimum) || priority > int(smsgateway.PriorityMaximum) {
+			return cli.Exit(fmt.Sprintf("Priority must be between %d and %d", smsgateway.PriorityMinimum, smsgateway.PriorityMaximum), codes.ParamsError)
 		}
 
 		return nil
@@ -63,10 +78,13 @@ var send = &cli.Command{
 		client := metadata.GetClient(c.App.Metadata)
 		renderer := metadata.GetRenderer(c.App.Metadata)
 
+		withDeliveryReport := c.Bool("deliveryReport")
 		req := smsgateway.Message{
-			ID:           c.String("id"),
-			Message:      msg,
-			PhoneNumbers: c.StringSlice("phones"),
+			ID:                 c.String("id"),
+			Message:            msg,
+			PhoneNumbers:       c.StringSlice("phones"),
+			WithDeliveryReport: &withDeliveryReport,
+			Priority:           smsgateway.MessagePriority(c.Int("priority")),
 		}
 
 		if sim := uint8(c.Int("sim")); sim > 0 {
