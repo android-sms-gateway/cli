@@ -26,6 +26,8 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 	builder := strings.Builder{}
 	builder.WriteString("ID: ")
 	builder.WriteString(src.ID)
+	builder.WriteString("\nDevice ID: ")
+	builder.WriteString(src.DeviceID)
 	builder.WriteString("\nState: ")
 	builder.WriteString(string(src.State))
 	builder.WriteString("\nIsHashed: ")
