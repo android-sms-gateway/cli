@@ -1,52 +1,86 @@
-<a name="readme-top"></a>
+<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
+<a id="readme-top"></a>
+<!-- PROJECT SHIELDS -->
+[![Contributors][contributors-shield]][contributors-url]
+[![Forks][forks-shield]][forks-url]
+[![Stargazers][stars-shield]][stars-url]
+[![Issues][issues-shield]][issues-url]
+[![Apache-2.0 License][license-shield]][license-url]
 
-# SMS Gateway for Android™ CLI
+<br />
 
-A command-line interface for interacting with the SMS Gateway for Android API.
+<div align="center">
+  <h3 align="center">SMS Gateway for Android™ CLI</h3>
 
-There are two CLI tools in this repository: `smsgate` and `smsgate-ca`. The first one is for SMS Gateway for Android itself, and the second one is for the Certificate Authority.
+  <p align="center">
+    A command-line interface for interacting with the SMS Gateway for Android API
+    <br />
+    <a href="https://docs.sms-gate.app/integration/cli/"><strong>Explore the docs »</strong></a>
+    <br />
+    <br />
+    <a href="https://github.com/android-sms-gateway/cli/issues/new?labels=bug">Report Bug</a>
+    ·
+    <a href="https://github.com/android-sms-gateway/cli/issues/new?labels=enhancement">Request Feature</a>
+  </p>
+</div>
 
-## Table of Contents
-
-- [SMS Gateway for Android™ CLI](#sms-gateway-for-android-cli)
-  - [Table of Contents](#table-of-contents)
+<!-- TABLE OF CONTENTS -->
+- [📱 About The Project](#-about-the-project)
+  - [⚙️ Built With](#️-built-with)
+- [💻 Getting Started](#-getting-started)
+  - [Prerequisites](#prerequisites)
   - [Installation](#installation)
     - [Option 1: Download from GitHub Releases](#option-1-download-from-github-releases)
     - [Option 2: Install using Go](#option-2-install-using-go)
-  - [Configuration](#configuration)
-    - [Available Options](#available-options)
-    - [Output Formats](#output-formats)
-  - [Usage](#usage)
-    - [Commands](#commands)
-    - [Exit codes](#exit-codes)
-    - [Examples](#examples)
-      - [Output formats](#output-formats-1)
-  - [Support](#support)
-  - [Contributing](#contributing)
-  - [License](#license)
-  - [Legal Notice](#legal-notice)
+    - [Option 3: Docker](#option-3-docker)
+- [💻 Configuration](#-configuration)
+  - [Available Options](#available-options)
+  - [Output Formats](#output-formats)
+- [💻 Usage](#-usage)
+  - [Commands](#commands)
+  - [Exit codes](#exit-codes)
+  - [Examples](#examples)
+    - [Output formats](#output-formats-1)
+- [👥 Contributing](#-contributing)
+- [©️ License](#️-license)
+- [⚠️ Legal Notice](#️-legal-notice)
 
-## Installation
 
-You can install the SMS Gateway CLI in two ways:
+<!-- ABOUT THE PROJECT -->
+## 📱 About The Project
 
-### Option 1: Download from GitHub Releases
+There are two CLI tools in this repository: `smsgate` and `smsgate-ca`. The first one is for SMS Gateway for Android itself, and the second one is for the Certificate Authority.
+
+This CLI provides a robust interface for:
+- Sending and managing SMS messages
+- Configuring webhook integrations
+- Issuing certificates for private deployments
+
+### ⚙️ Built With
+
+- [![Go][Go-shield]][Go-url]
+- [![Goreleaser][Goreleaser-shield]][Goreleaser-url]
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- GETTING STARTED -->
+## 💻 Getting Started
+
+### Prerequisites
+
+- Go 1.23+ (for building from source)
+- Docker (optional, for containerized execution)
+
+### Installation
+
+#### Option 1: Download from GitHub Releases
 
 1. Go to the [Releases page](https://github.com/android-sms-gateway/cli/releases/latest) of this repository.
 2. Download the appropriate binary for your operating system and architecture.
-3. Rename the downloaded file to `smsgate` (or `smsgate.exe` for Windows).
+3. Extract the archive to a directory of your choice.
 4. Move the binary to a directory in your system's PATH.
 
-For example, on Linux or macOS:
-
-```bash
-mv /path/to/downloaded/binary /usr/local/bin/smsgate
-chmod +x /usr/local/bin/smsgate
-```
-
-### Option 2: Install using Go
-
-If you have Go installed on your system (version 1.23 or later), you can use the go install command:
+#### Option 2: Install using Go
 
 ```bash
 go install github.com/android-sms-gateway/cli/cmd/smsgate@latest
@@ -54,11 +88,16 @@ go install github.com/android-sms-gateway/cli/cmd/smsgate@latest
 
 This will download, compile, and install the latest version of the CLI tool. Make sure your Go bin directory is in your system's PATH.
 
-After installation, you can run the CLI tool using the `smsgate` command.
+#### Option 3: Docker
+
+```bash
+docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli \
+  send --phone '+12025550123' 'Hello, Dr. Turk!'
+```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Configuration
+## 💻 Configuration
 
 The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables.
 
@@ -83,7 +122,7 @@ Please note that when the exit code is not `0`, the error description is printed
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Usage
+## 💻 Usage
 
 ```bash
 smsgate [global options] command [command options] [arguments...]
@@ -115,12 +154,12 @@ For security reasons, it is recommended to pass credentials using environment va
 
 ```bash
 # Send a message
-smsgate send --phone '+19162255887' 'Hello, Dr. Turk!'
+smsgate send --phones '+12025550123' 'Hello, Dr. Turk!'
 
 # Send a message to multiple numbers
-smsgate send --phone '+19162255887' --phone '+19162255888' 'Hello, doctors!'
+smsgate send --phones '+12025550123' --phones '+12025550124' 'Hello, doctors!'
 # or
-smsgate send --phones '+19162255887,+19162255888' 'Hello, doctors!'
+smsgate send --phones '+12025550123,+12025550124' 'Hello, doctors!'
 
 # Get the status of a sent message
 smsgate status zXDYfTmTVf3iMd16zzdBj
@@ -129,28 +168,21 @@ smsgate status zXDYfTmTVf3iMd16zzdBj
 Credentials can also be passed via CLI options:
 
 ```bash
-# Pass credentials by options
-smsgate send -u <username> -p <password> --phone '+19162255887' 'Hello, Dr. Turk!'
-```
-
-If you prefer not to install the CLI tool locally, you can use Docker to run it:
-
-```bash
-docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli send --phone '+19162255887' 'Hello, Dr. Turk!'
+smsgate send -u <username> -p <password> --phones '+12025550123' 'Hello, Dr. Turk!'
 ```
 
 #### Output formats
 
 **Text**
 
-```
+```text
 ID: zXDYfTmTVf3iMd16zzdBj
 State: Pending
 IsHashed: false
 IsEncrypted: false
-Recipients: 
-        +19162255887    Pending
-        +19162255888    Pending
+Recipients:
+        +12025550123    Pending
+        +12025550124    Pending
 ```
 
 **JSON**
@@ -163,11 +195,11 @@ Recipients:
   "isEncrypted": false,
   "recipients": [
     {
-      "phoneNumber": "+19162255887",
+      "phoneNumber": "+12025550123",
       "state": "Pending"
     },
     {
-      "phoneNumber": "+19162255888",
+      "phoneNumber": "+12025550124",
       "state": "Pending"
     }
   ],
@@ -178,18 +210,12 @@ Recipients:
 **Raw**
 
 ```json
-{"id":"zXDYfTmTVf3iMd16zzdBj","state":"Pending","isHashed":false,"isEncrypted":false,"recipients":[{"phoneNumber":"+19162255887","state":"Pending"},{"phoneNumber":"+19162255888","state":"Pending"}],"states":{}}
+{"id":"zXDYfTmTVf3iMd16zzdBj","state":"Pending","isHashed":false,"isEncrypted":false,"recipients":[{"phoneNumber":"+12025550123","state":"Pending"},{"phoneNumber":"+12025550124","state":"Pending"}],"states":{}}
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Support
-
-For support, please contact support@sms-gate.app
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Contributing
+## 👥 Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
@@ -204,14 +230,31 @@ Don't forget to give the project a star! Thanks again!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## License
+## ©️ License
 
 Distributed under the Apache-2.0 license. See [LICENSE](LICENSE) for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## Legal Notice
+## ⚠️ Legal Notice
 
 Android is a trademark of Google LLC.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+<!-- MARKDOWN LINKS & IMAGES -->
+<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
+[contributors-shield]: https://img.shields.io/github/contributors/android-sms-gateway/cli?style=for-the-badge
+[contributors-url]: https://github.com/android-sms-gateway/cli/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/android-sms-gateway/cli?style=for-the-badge
+[forks-url]: https://github.com/android-sms-gateway/cli/network/members
+[stars-shield]: https://img.shields.io/github/stars/android-sms-gateway/cli?style=for-the-badge
+[stars-url]: https://github.com/android-sms-gateway/cli/stargazers
+[issues-shield]: https://img.shields.io/github/issues/android-sms-gateway/cli?style=for-the-badge
+[issues-url]: https://github.com/android-sms-gateway/cli/issues
+[license-shield]: https://img.shields.io/github/license/android-sms-gateway/cli?style=for-the-badge
+[license-url]: https://github.com/android-sms-gateway/cli/blob/main/LICENSE
+[Go-shield]: https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
+[Go-url]: https://go.dev
+[Goreleaser-shield]: https://img.shields.io/badge/Goreleaser-FF007A?style=for-the-badge&logo=goreleaser&logoColor=white
+[Goreleaser-url]: https://goreleaser.com
