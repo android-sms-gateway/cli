@@ -1,11 +1,7 @@
-github.com/android-sms-gateway/client-go v1.5.5-0.20250309004612-ebfc247ebb13 h1:OSPmpOeLtU10zULCNuSJ6ouuwlKZlBaxYEs5vxknPWI=
-github.com/android-sms-gateway/client-go v1.5.5-0.20250309004612-ebfc247ebb13/go.mod h1:DQsReciU1xcaVW3T5Z2bqslNdsAwCFCtghawmA6g6L4=
-github.com/android-sms-gateway/client-go v1.5.5 h1:38ykCT1g+w3dW7ZNDeX1qyfZuvXI5h19MP/WFg4Rodw=
-github.com/android-sms-gateway/client-go v1.5.5/go.mod h1:DQsReciU1xcaVW3T5Z2bqslNdsAwCFCtghawmA6g6L4=
-github.com/android-sms-gateway/client-go v1.7.0 h1:952kvhk/yDQmiVjKJV+dKHYNoWuObBwXbARwqYevbnA=
-github.com/android-sms-gateway/client-go v1.7.0/go.mod h1:DQsReciU1xcaVW3T5Z2bqslNdsAwCFCtghawmA6g6L4=
-github.com/capcom6/go-helpers v0.0.0-20240521035631-865ee2879fa3 h1:mq9rmBMCCzqGnZtbQqFSd+Ua3fahqUOYaTf26YFhWJc=
-github.com/capcom6/go-helpers v0.0.0-20240521035631-865ee2879fa3/go.mod h1:WDqc7HZNqHxUTisArkYIBZtqUfJBVyPWeQI+FMwEzAw=
+github.com/android-sms-gateway/client-go v1.9.2 h1:e9HFgvR+LRMV0dOJvFkxt998UxOMWNf8hfnXwMIc39I=
+github.com/android-sms-gateway/client-go v1.9.2/go.mod h1:DQsReciU1xcaVW3T5Z2bqslNdsAwCFCtghawmA6g6L4=
+github.com/capcom6/go-helpers v0.4.0 h1:z2G7YFqNn3pgsdn8wVO/ZoLd/P2ckk5p97vbrGqwBAY=
+github.com/capcom6/go-helpers v0.4.0/go.mod h1:WDqc7HZNqHxUTisArkYIBZtqUfJBVyPWeQI+FMwEzAw=
 github.com/cpuguy83/go-md2man/v2 v2.0.5 h1:ZtcqGrnekaHpVLArFSe4HK5DoKx1T0rq2DwVB0alcyc=
 github.com/cpuguy83/go-md2man/v2 v2.0.5/go.mod h1:tgQtvFlXSQOSOSIRvRPT7W67SCa46tRHOmNcaadrF8o=
 github.com/joho/godotenv v1.5.1 h1:7eLL/+HRGLY0ldzfGMeQkb7vMd0as4CfYvUVzLqw0N0=

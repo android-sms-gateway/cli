@@ -1,12 +1,15 @@
 package messages
 
 import (
+	"encoding/base64"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/android-sms-gateway/cli/internal/core/codes"
 	"github.com/android-sms-gateway/cli/internal/utils/metadata"
 	"github.com/android-sms-gateway/client-go/smsgateway"
+	"github.com/capcom6/go-helpers/anys"
 	"github.com/urfave/cli/v2"
 )
 
@@ -17,10 +20,16 @@ var send = &cli.Command{
 	ArgsUsage: "Message content",
 	Category:  "Messages",
 	Flags: []cli.Flag{
+		// Body fields
 		&cli.StringFlag{
 			Name:     "id",
 			Usage:    "Message ID",
 			Required: false,
+		},
+		&cli.StringFlag{
+			Name:    "deviceId",
+			Aliases: []string{"device", "device-id"},
+			Usage:   "Optional device ID for explicit selection",
 		},
 		&cli.StringSliceFlag{
 			Name:     "phones",
@@ -54,8 +63,38 @@ var send = &cli.Command{
 			Layout:   time.RFC3339,
 			Timezone: time.Local,
 		},
+
+		// Data Message
+		&cli.BoolFlag{
+			Name:  "data",
+			Usage: "Send data message instead of text, content should be base64 (default: false)",
+			Value: false,
+		},
+		&cli.UintFlag{
+			Name:    "dataPort",
+			Aliases: []string{"data-port"},
+			Usage:   "Destination port for data message (1 to 65535, default: 53739)",
+			Value:   53739,
+		},
+
+		// Query params
+		&cli.BoolFlag{
+			Name:  "skipPhoneValidation",
+			Usage: "Skip phone number validation (default: false)",
+			Value: false,
+		},
+		&cli.UintFlag{
+			Name:  "deviceActiveWithin",
+			Usage: "Filter devices active within the specified number of hours",
+			Value: 0,
+		},
 	},
 	Before: func(c *cli.Context) error {
+		sim := c.Int("sim")
+		if sim < 0 {
+			return cli.Exit("SIM card index must be at least 1", codes.ParamsError)
+		}
+
 		ttl := c.Duration("ttl")
 		validUntil := c.Timestamp("validUntil")
 		if ttl > 0 && validUntil != nil {
@@ -65,6 +104,24 @@ var send = &cli.Command{
 		priority := c.Int("priority")
 		if priority < int(smsgateway.PriorityMinimum) || priority > int(smsgateway.PriorityMaximum) {
 			return cli.Exit(fmt.Sprintf("Priority must be between %d and %d", smsgateway.PriorityMinimum, smsgateway.PriorityMaximum), codes.ParamsError)
+		}
+
+		isDataMessage := c.Bool("data")
+		if isDataMessage {
+			dataPort := c.Uint("data-port")
+			if dataPort < 1 || dataPort > 65535 {
+				return cli.Exit("Data port must be between 1 and 65535", codes.ParamsError)
+			}
+
+			data := strings.TrimSpace(c.Args().Get(0))
+			if data == "" {
+				return cli.Exit("Message is empty", codes.ParamsError)
+			}
+			if _, err := base64.StdEncoding.DecodeString(data); err != nil {
+				if _, err2 := base64.RawStdEncoding.DecodeString(data); err2 != nil {
+					return cli.Exit("Invalid base64 data", codes.ParamsError)
+				}
+			}
 		}
 
 		return nil
@@ -78,17 +135,29 @@ var send = &cli.Command{
 		client := metadata.GetClient(c.App.Metadata)
 		renderer := metadata.GetRenderer(c.App.Metadata)
 
+		isDataMessage := c.Bool("data")
 		withDeliveryReport := c.Bool("deliveryReport")
 		req := smsgateway.Message{
 			ID:                 c.String("id"),
-			Message:            msg,
+			DeviceID:           c.String("deviceId"),
 			PhoneNumbers:       c.StringSlice("phones"),
 			WithDeliveryReport: &withDeliveryReport,
 			Priority:           smsgateway.MessagePriority(c.Int("priority")),
 		}
 
-		if sim := uint8(c.Int("sim")); sim > 0 {
-			req.SimNumber = &sim
+		if isDataMessage {
+			req.DataMessage = &smsgateway.DataMessage{
+				Data: msg,
+				Port: uint16(c.Uint("data-port")),
+			}
+		} else {
+			req.TextMessage = &smsgateway.TextMessage{
+				Text: msg,
+			}
+		}
+
+		if sim := c.Int("sim"); sim > 0 {
+			req.SimNumber = anys.AsPointer(uint8(sim))
 		}
 		if ttl := uint64(c.Duration("ttl").Seconds()); ttl > 0 {
 			req.TTL = &ttl
@@ -97,7 +166,16 @@ var send = &cli.Command{
 			req.ValidUntil = validUntil
 		}
 
-		res, err := client.Send(c.Context, req)
+		options := []smsgateway.SendOption{}
+
+		if c.Bool("skipPhoneValidation") {
+			options = append(options, smsgateway.WithSkipPhoneValidation(true))
+		}
+		if v := c.Uint("deviceActiveWithin"); v > 0 {
+			options = append(options, smsgateway.WithDeviceActiveWithin(v))
+		}
+
+		res, err := client.Send(c.Context, req, options...)
 		if err != nil {
 			return cli.Exit(err.Error(), codes.ClientError)
 		}
