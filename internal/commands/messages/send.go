@@ -27,9 +27,10 @@ var send = &cli.Command{
 			Required: false,
 		},
 		&cli.StringFlag{
-			Name:    "deviceId",
-			Aliases: []string{"device", "device-id"},
-			Usage:   "Optional device ID for explicit selection",
+			Name:        "device-id",
+			Aliases:     []string{"device", "deviceId"},
+			Usage:       "Optional device ID for explicit selection",
+			DefaultText: "auto",
 		},
 		&cli.StringSliceFlag{
 			Name:     "phones",
@@ -38,18 +39,20 @@ var send = &cli.Command{
 			Required: true,
 		},
 		&cli.IntFlag{
-			Name:    "sim",
-			Aliases: []string{"simNumber"},
-			Usage:   "SIM card index (one-based index, e.g. 1)",
+			Name:        "sim-number",
+			Aliases:     []string{"simNumber", "sim"},
+			Usage:       "SIM card index (one-based index, e.g. 1)",
+			DefaultText: "see device settings",
 		},
 		&cli.BoolFlag{
-			Name:  "deliveryReport",
-			Usage: "Enable delivery report (default: true)",
-			Value: true,
+			Name:    "delivery-report",
+			Aliases: []string{"deliveryReport"},
+			Usage:   "Enable delivery report",
+			Value:   true,
 		},
 		&cli.IntFlag{
 			Name:  "priority",
-			Usage: "Priority, use >= 100 to bypass all limits and delays (-128 to 127, default: 0)",
+			Usage: "Priority, use >= 100 to bypass all limits and delays (-128 to 127)",
 			Value: 0,
 		},
 		&cli.DurationFlag{
@@ -58,7 +61,8 @@ var send = &cli.Command{
 			DefaultText: "unlimited",
 		},
 		&cli.TimestampFlag{
-			Name:     "validUntil",
+			Name:     "valid-until",
+			Aliases:  []string{"validUntil"},
 			Usage:    "Valid until (RFC3339 format, e.g. 2006-01-02T15:04:05Z07:00)",
 			Layout:   time.RFC3339,
 			Timezone: time.Local,
@@ -67,36 +71,38 @@ var send = &cli.Command{
 		// Data Message
 		&cli.BoolFlag{
 			Name:  "data",
-			Usage: "Send data message instead of text, content should be base64 (default: false)",
+			Usage: "Send data message instead of text, content should be base64",
 			Value: false,
 		},
 		&cli.UintFlag{
-			Name:    "dataPort",
-			Aliases: []string{"data-port"},
-			Usage:   "Destination port for data message (1 to 65535, default: 53739)",
+			Name:    "data-port",
+			Aliases: []string{"dataPort"},
+			Usage:   "Destination port for data message (1 to 65535)",
 			Value:   53739,
 		},
 
 		// Query params
 		&cli.BoolFlag{
-			Name:  "skipPhoneValidation",
-			Usage: "Skip phone number validation (default: false)",
-			Value: false,
+			Name:    "skip-phone-validation",
+			Aliases: []string{"skipPhoneValidation"},
+			Usage:   "Skip phone number validation (default: false)",
+			Value:   false,
 		},
 		&cli.UintFlag{
-			Name:  "deviceActiveWithin",
-			Usage: "Filter devices active within the specified number of hours",
-			Value: 0,
+			Name:    "device-active-within",
+			Aliases: []string{"deviceActiveWithin"},
+			Usage:   "Filter devices active within the specified number of hours",
+			Value:   0,
 		},
 	},
 	Before: func(c *cli.Context) error {
-		sim := c.Int("sim")
+		sim := c.Int("sim-number")
 		if sim < 0 {
 			return cli.Exit("SIM card index must be at least 1", codes.ParamsError)
 		}
 
 		ttl := c.Duration("ttl")
-		validUntil := c.Timestamp("validUntil")
+		validUntil := c.Timestamp("valid-until")
 		if ttl > 0 && validUntil != nil {
 			return cli.Exit("TTL and Valid Until flags are mutually exclusive", codes.ParamsError)
 		}
@@ -136,10 +142,10 @@ var send = &cli.Command{
 		renderer := metadata.GetRenderer(c.App.Metadata)
 
 		isDataMessage := c.Bool("data")
-		withDeliveryReport := c.Bool("deliveryReport")
+		withDeliveryReport := c.Bool("delivery-report")
 		req := smsgateway.Message{
 			ID:                 c.String("id"),
-			DeviceID:           c.String("deviceId"),
+			DeviceID:           c.String("device-id"),
 			PhoneNumbers:       c.StringSlice("phones"),
 			WithDeliveryReport: &withDeliveryReport,
 			Priority:           smsgateway.MessagePriority(c.Int("priority")),
@@ -156,22 +162,22 @@ var send = &cli.Command{
 			}
 		}
 
-		if sim := c.Int("sim"); sim > 0 {
+		if sim := c.Int("sim-number"); sim > 0 {
 			req.SimNumber = anys.AsPointer(uint8(sim))
 		}
 		if ttl := uint64(c.Duration("ttl").Seconds()); ttl > 0 {
 			req.TTL = &ttl
 		}
-		if validUntil := c.Timestamp("validUntil"); validUntil != nil {
+		if validUntil := c.Timestamp("valid-until"); validUntil != nil {
 			req.ValidUntil = validUntil
 		}
 
 		options := []smsgateway.SendOption{}
 
-		if c.Bool("skipPhoneValidation") {
+		if c.Bool("skip-phone-validation") {
 			options = append(options, smsgateway.WithSkipPhoneValidation(true))
 		}
-		if v := c.Uint("deviceActiveWithin"); v > 0 {
+		if v := c.Uint("device-active-within"); v > 0 {
 			options = append(options, smsgateway.WithDeviceActiveWithin(v))
 		}
 
