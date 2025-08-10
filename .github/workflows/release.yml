@@ -1,5 +1,4 @@
-# .github/workflows/release.yml
-name: goreleaser
+name: Release
 
 on:
   push:
@@ -10,7 +9,6 @@ on:
 permissions:
   contents: write
   packages: write
-  # issues: write
 
 jobs:
   goreleaser:
@@ -26,14 +24,12 @@ jobs:
           go-version: stable
 
       - name: Login to Docker Hub
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Login to GitHub Container registry
-        if: github.event_name != 'pull_request'
         uses: docker/login-action@v3
         with:
           registry: ghcr.io

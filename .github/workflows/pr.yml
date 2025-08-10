@@ -1,0 +1,107 @@
+name: PR
+
+on:
+  pull_request:
+    branches: [master]
+
+permissions:
+  contents: read
+  packages: write
+  pull-requests: write
+
+jobs:
+  goreleaser:
+    runs-on: ubuntu-latest
+    if: github.actor != 'dependabot[bot]'
+    concurrency:
+      group: ${{ github.workflow }}-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Set up Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: stable
+
+      - name: Login to GitHub Container registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v6
+        with:
+          # either 'goreleaser' (default) or 'goreleaser-pro'
+          distribution: goreleaser
+          # 'latest', 'nightly', or a semver
+          version: "~> v2"
+          args: release --snapshot
+
+      - name: Upload to S3
+        uses: capcom6/upload-s3-action@master
+        env:
+          AWS_REGION: ${{ secrets.AWS_REGION }}
+        with:
+          aws_key_id: ${{ secrets.AWS_KEY_ID }}
+          aws_secret_access_key: ${{ secrets.AWS_SECRET_ACCESS_KEY}}
+          aws_bucket: ${{ secrets.AWS_BUCKET }}
+          endpoint: ${{ secrets.AWS_ENDPOINT }}
+          source_files: |
+            dist/smsgate_Windows_i386.zip
+            dist/smsgate_Linux_arm64.tar.gz
+            dist/smsgate_Darwin_arm64.tar.gz
+            dist/smsgate_Windows_x86_64.zip
+            dist/smsgate_Linux_x86_64.tar.gz
+            dist/smsgate_Windows_arm64.zip
+            dist/smsgate_Darwin_x86_64.tar.gz
+            dist/smsgate_Linux_i386.tar.gz
+          destination_dir: ${{ github.repository }}/${{ github.event.pull_request.head.sha }}
+
+      - name: Push images
+        run: |
+          docker tag ghcr.io/${{ github.repository }}:latest-amd64 ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-amd64
+          docker push ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-amd64
+
+          docker tag ghcr.io/${{ github.repository }}:latest-arm64 ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-arm64
+          docker push ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-arm64
+
+          docker manifest create ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }} \
+            ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-amd64 \
+            ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}-arm64
+
+          docker manifest push ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }}
+
+      - name: Find Comment
+        uses: peter-evans/find-comment@v3
+        id: fc
+        with:
+          issue-number: ${{ github.event.pull_request.number }}
+          comment-author: "github-actions[bot]"
+          body-includes: Pull request artifacts
+
+      - name: Create or update comment
+        uses: peter-evans/create-or-update-comment@v4
+        with:
+          comment-id: ${{ steps.fc.outputs.comment-id }}
+          issue-number: ${{ github.event.pull_request.number }}
+          body: |
+            ## 🤖 Pull request artifacts
+
+            | Platform          | File                                                                                                                                                                    |
+            | ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+            | 🍎 Darwin arm64   | [smsgate_Darwin_arm64.tar.gz](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Darwin_arm64.tar.gz)   |
+            | 🍎 Darwin x86_64  | [smsgate_Darwin_x86_64.tar.gz](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Darwin_x86_64.tar.gz) |
+            | 🐳 Docker         | [GitHub Container Registry](https://ghcr.io/${{ github.repository }}:pr-${{ github.event.pull_request.number }})                                                        |
+            | 🐧 Linux arm64    | [smsgate_Linux_arm64.tar.gz](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Linux_arm64.tar.gz)     |
+            | 🐧 Linux i386     | [smsgate_Linux_i386.tar.gz](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Linux_i386.tar.gz)       |
+            | 🐧 Linux x86_64   | [smsgate_Linux_x86_64.tar.gz](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Linux_x86_64.tar.gz)   |
+            | 🪟 Windows arm64  | [smsgate_Windows_arm64.zip](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Windows_arm64.zip)       |
+            | 🪟 Windows i386   | [smsgate_Windows_i386.zip](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Windows_i386.zip)         |
+            | 🪟 Windows x86_64 | [smsgate_Windows_x86_64.zip](https://s3.sms-gate.app/${{ github.repository }}/${{ github.event.pull_request.head.sha }}/smsgate_Windows_x86_64.zip)     |
+
+          edit-mode: replace
