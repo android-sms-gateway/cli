@@ -2,6 +2,7 @@ package webhooks
 
 import (
 	"fmt"
+	"net/url"
 	"strings"
 
 	"github.com/android-sms-gateway/cli/internal/core/codes"
@@ -41,9 +42,15 @@ var register = &cli.Command{
 		},
 	},
 	Action: func(c *cli.Context) error {
-		url := c.Args().Get(0)
-		if url == "" {
+		targetUrl := strings.TrimSpace(c.Args().Get(0))
+		if targetUrl == "" {
 			return cli.Exit("URL is empty", codes.ParamsError)
+		}
+
+		// accept only absolute http/https URLs
+		parsed, err := url.Parse(targetUrl)
+		if err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+			return cli.Exit("invalid URL", codes.ParamsError)
 		}
 
 		client := metadata.GetClient(c.App.Metadata)
@@ -51,7 +58,7 @@ var register = &cli.Command{
 
 		req := smsgateway.Webhook{
 			ID:    c.String("id"),
-			URL:   url,
+			URL:   targetUrl,
 			Event: c.String("event"),
 		}
 
