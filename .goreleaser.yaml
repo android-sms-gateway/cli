@@ -50,21 +50,78 @@ archives:
 
 dockers:
   - image_templates:
-      - "smsgate/cli:{{ .Tag }}"
-      - "smsgate/cli:v{{ .Major }}"
-      - "smsgate/cli:v{{ .Major }}.{{ .Minor }}"
-      - "smsgate/cli:latest"
-      - ghcr.io/android-sms-gateway/cli:{{ .Tag }}
-      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}
-      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}
-      - ghcr.io/android-sms-gateway/cli:latest
+      - "smsgate/cli:{{ .Tag }}-amd64"
+      - "smsgate/cli:v{{ .Major }}-amd64"
+      - "smsgate/cli:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "smsgate/cli:latest-amd64"
+      - ghcr.io/android-sms-gateway/cli:{{ .Tag }}-amd64
+      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}-amd64
+      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}-amd64
+      - ghcr.io/android-sms-gateway/cli:latest-amd64
     dockerfile: Dockerfile.goreleaser
     build_flag_templates:
       - "--label=org.opencontainers.image.created={{ .Date }}"
       - "--label=org.opencontainers.image.title={{ .ProjectName }}"
       - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
       - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--pull"
+      - "--platform=linux/amd64"
     skip_push: false
+    use: buildx
+  - image_templates:
+      - "smsgate/cli:{{ .Tag }}-arm64"
+      - "smsgate/cli:v{{ .Major }}-arm64"
+      - "smsgate/cli:v{{ .Major }}.{{ .Minor }}-arm64"
+      - "smsgate/cli:latest-arm64"
+      - ghcr.io/android-sms-gateway/cli:{{ .Tag }}-arm64
+      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}-arm64
+      - ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}-arm64
+      - ghcr.io/android-sms-gateway/cli:latest-arm64
+    dockerfile: Dockerfile.goreleaser
+    build_flag_templates:
+      - "--label=org.opencontainers.image.created={{ .Date }}"
+      - "--label=org.opencontainers.image.title={{ .ProjectName }}"
+      - "--label=org.opencontainers.image.revision={{ .FullCommit }}"
+      - "--label=org.opencontainers.image.version={{ .Version }}"
+      - "--pull"
+      - "--platform=linux/arm64"
+    skip_push: false
+    use: buildx
+
+docker_manifests:
+  - name_template: "ghcr.io/android-sms-gateway/cli:{{ .Tag }}"
+    image_templates:
+      - "ghcr.io/android-sms-gateway/cli:{{ .Tag }}-amd64"
+      - "ghcr.io/android-sms-gateway/cli:{{ .Tag }}-arm64"
+  - name_template: "ghcr.io/android-sms-gateway/cli:v{{ .Major }}"
+    image_templates:
+      - "ghcr.io/android-sms-gateway/cli:v{{ .Major }}-amd64"
+      - "ghcr.io/android-sms-gateway/cli:v{{ .Major }}-arm64"
+  - name_template: "ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "ghcr.io/android-sms-gateway/cli:v{{ .Major }}.{{ .Minor }}-arm64"
+  - name_template: "ghcr.io/android-sms-gateway/cli:latest"
+    image_templates:
+      - "ghcr.io/android-sms-gateway/cli:latest-amd64"
+      - "ghcr.io/android-sms-gateway/cli:latest-arm64"
+
+  - name_template: "smsgate/cli:{{ .Tag }}"
+    image_templates:
+      - "smsgate/cli:{{ .Tag }}-amd64"
+      - "smsgate/cli:{{ .Tag }}-arm64"
+  - name_template: "smsgate/cli:v{{ .Major }}"
+    image_templates:
+      - "smsgate/cli:v{{ .Major }}-amd64"
+      - "smsgate/cli:v{{ .Major }}-arm64"
+  - name_template: "smsgate/cli:v{{ .Major }}.{{ .Minor }}"
+    image_templates:
+      - "smsgate/cli:v{{ .Major }}.{{ .Minor }}-amd64"
+      - "smsgate/cli:v{{ .Major }}.{{ .Minor }}-arm64"
+  - name_template: "smsgate/cli:latest"
+    image_templates:
+      - "smsgate/cli:latest-amd64"
+      - "smsgate/cli:latest-arm64"
 
 changelog:
   sort: asc
