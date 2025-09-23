@@ -168,7 +168,7 @@ smsgate status zXDYfTmTVf3iMd16zzdBj
 Credentials can also be passed via CLI options:
 
 ```bash
-smsgate send -u <username> -p <password> --phones '+12025550123' 'Hello, Dr. Turk!'
+smsgate -u <username> -p <password> send --phones '+12025550123' 'Hello, Dr. Turk!'
 ```
 
 #### Output formats
