@@ -7,14 +7,6 @@ import (
 	"github.com/android-sms-gateway/client-go/smsgateway"
 )
 
-var messageStates = []string{
-	string(smsgateway.ProcessingStatePending),
-	string(smsgateway.ProcessingStateProcessed),
-	string(smsgateway.ProcessingStateSent),
-	string(smsgateway.ProcessingStateDelivered),
-	string(smsgateway.ProcessingStateFailed),
-}
-
 type TextOutput struct {
 }
 
@@ -51,6 +43,14 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 	}
 
 	if len(src.States) > 0 {
+		var messageStates = []string{
+			string(smsgateway.ProcessingStatePending),
+			string(smsgateway.ProcessingStateProcessed),
+			string(smsgateway.ProcessingStateSent),
+			string(smsgateway.ProcessingStateDelivered),
+			string(smsgateway.ProcessingStateFailed),
+		}
+
 		builder.WriteString("\nStates: ")
 
 		for _, k := range messageStates {

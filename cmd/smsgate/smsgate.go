@@ -25,11 +25,15 @@ func main() {
 		os.Exit(codes.ParamsError)
 	}
 
+	cmds := make([]*cli.Command, 0, len(messages.Commands())+len(webhooks.Commands()))
+	cmds = append(cmds, messages.Commands()...)
+	cmds = append(cmds, webhooks.Commands()...)
+
 	app := &cli.App{
 		Name:     "smsgate",
 		Usage:    "CLI interface for working with SMS Gateway for Android™",
 		Version:  version,
-		Commands: make([]*cli.Command, 0, len(messages.Commands)+len(webhooks.Commands)),
+		Commands: cmds,
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:        "endpoint",
@@ -81,17 +85,18 @@ func main() {
 		Before: func(c *cli.Context) error {
 			renderer, err := output.New(output.Format(c.String("format")))
 			if err != nil {
-				return err
+				return fmt.Errorf("failed to create renderer: %w", err)
 			}
 
 			c.App.Metadata[metadata.RendererKey] = renderer
-			c.App.Metadata[metadata.ClientKey] = client.New(c.String("username"), c.String("password"), c.String("endpoint"))
+			c.App.Metadata[metadata.ClientKey] = client.New(
+				c.String("username"),
+				c.String("password"),
+				c.String("endpoint"),
+			)
 			return nil
 		},
 	}
-
-	app.Commands = append(app.Commands, messages.Commands...)
-	app.Commands = append(app.Commands, webhooks.Commands...)
 
 	if err := app.Run(os.Args); err != nil {
 		fmt.Fprintf(os.Stderr, "Error: %v\n", err)

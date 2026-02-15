@@ -12,7 +12,7 @@ import (
 )
 
 // NewIPCertificateCommand creates a new CLI command for generating an IP certificate
-// of the specified type
+// of the specified type.
 func NewIPCertificateCommand(name, usage string, aliases []string, typ ca.CSRType) *cli.Command {
 	return &cli.Command{
 		Name:      name,
@@ -59,5 +59,4 @@ func NewIPCertificateCommand(name, usage string, aliases []string, typ ca.CSRTyp
 			return requestCertificate(c, typ, csrTemplate)
 		},
 	}
-
 }

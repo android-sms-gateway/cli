@@ -8,7 +8,7 @@ import (
 	"crypto/x509/pkix"
 	"encoding/pem"
 	"fmt"
-	"log"
+	"log" //nolint:depguard // TODO: replace with logger from mariadb-backup-s3
 	"os"
 	"time"
 
@@ -38,7 +38,7 @@ func newServerCertificateRequestPEM(template x509.CertificateRequest, priv *ecds
 		return nil, fmt.Errorf("failed to create certificate request: %w", err)
 	}
 
-	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Bytes: csrBytes}), nil
+	return pem.EncodeToMemory(&pem.Block{Type: "CERTIFICATE REQUEST", Headers: nil, Bytes: csrBytes}), nil
 }
 
 func requestCertificate(c *cli.Context, typ ca.CSRType, template x509.CertificateRequest) error {
@@ -54,8 +54,9 @@ func requestCertificate(c *cli.Context, typ ca.CSRType, template x509.Certificat
 	}
 
 	privPemBytes := pem.EncodeToMemory(&pem.Block{
-		Type:  "EC PRIVATE KEY",
-		Bytes: privBytes,
+		Type:    "EC PRIVATE KEY",
+		Headers: nil,
+		Bytes:   privBytes,
 	})
 
 	log.Println("Creating certificate request...")
@@ -68,14 +69,15 @@ func requestCertificate(c *cli.Context, typ ca.CSRType, template x509.Certificat
 	client := metadata.GetCAClient(c.App.Metadata)
 
 	resp, err := client.PostCSR(c.Context, ca.PostCSRRequest{
-		Type:    typ,
-		Content: string(csrPemBytes),
+		Type:     typ,
+		Content:  string(csrPemBytes),
+		Metadata: nil,
 	})
 	if err != nil {
 		return cli.Exit(err.Error(), codes.ClientError)
 	}
 
-	timeout := time.After(30 * time.Second)
+	timeout := time.After(c.Duration("timeout"))
 	for resp.Certificate == "" {
 		select {
 		case <-c.Context.Done():
@@ -93,12 +95,14 @@ func requestCertificate(c *cli.Context, typ ca.CSRType, template x509.Certificat
 	}
 
 	log.Println("Saving certificate...")
-	if err := os.WriteFile(c.String("out"), []byte(resp.Certificate), 0644); err != nil {
-		return cli.Exit(err.Error(), codes.OutputError)
+	if wrErr := os.WriteFile(c.String("out"), []byte(resp.Certificate), 0600); wrErr != nil {
+		return cli.Exit(wrErr.Error(), codes.OutputError)
 	}
-	if err := os.WriteFile(c.String("keyout"), privPemBytes, 0400); err != nil {
-		os.Remove(c.String("out"))
-		return cli.Exit(err.Error(), codes.OutputError)
+	if wrErr := os.WriteFile(c.String("keyout"), privPemBytes, 0400); wrErr != nil {
+		if rmErr := os.Remove(c.String("out")); rmErr != nil {
+			log.Printf("Failed to remove certificate file %s: %s", c.String("out"), rmErr.Error())
+		}
+		return cli.Exit(wrErr.Error(), codes.OutputError)
 	}
 
 	log.Printf("Certificate saved to %s\n", c.String("out"))

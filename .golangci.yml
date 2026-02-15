@@ -251,6 +251,8 @@ linters:
         - ^net/url.URL$
         - ^os/exec.Cmd$
         - ^reflect.StructField$
+        - ^crypto/x509.CertificateRequest$
+        - ^crypto/x509/pkix.Name$
         # public libs
         - ^firebase.google.com/go/v4/messaging.AndroidConfig$
         - ^firebase.google.com/go/v4/messaging.Message$
@@ -284,6 +286,7 @@ linters:
         - ^gopkg.in/telebot.v4.Settings$
         - ^gopkg.in/yaml.v3.Node$
         - ^gorm.io/gorm/clause.+$
+        - ^github.com/urfave/cli/v2.+$
       # Allows empty structures in return statements.
       # Default: false
       allow-empty-returns: true
