@@ -2,6 +2,7 @@ package output
 
 import (
 	"encoding/json"
+	"fmt"
 
 	"github.com/android-sms-gateway/client-go/smsgateway"
 )
@@ -15,7 +16,7 @@ func NewJSONOutput() *JSONOutput {
 		marshaler: func(a any) (string, error) {
 			b, err := json.MarshalIndent(a, "", "  ")
 			if err != nil {
-				return "", err
+				return "", fmt.Errorf("failed to marshal: %w", err)
 			}
 			return string(b), nil
 		},

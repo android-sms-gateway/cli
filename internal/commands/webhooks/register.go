@@ -3,76 +3,91 @@ package webhooks
 import (
 	"fmt"
 	"net/url"
+	"os"
 	"strings"
 
 	"github.com/android-sms-gateway/cli/internal/core/codes"
 	"github.com/android-sms-gateway/cli/internal/utils/metadata"
 	"github.com/android-sms-gateway/client-go/smsgateway"
-	"github.com/capcom6/go-helpers/slices"
+	"github.com/samber/lo"
 	"github.com/urfave/cli/v2"
 )
 
-var register = &cli.Command{
-	Category:  "Webhooks",
-	Name:      "register",
-	Aliases:   []string{"r"},
-	ArgsUsage: "URL",
-	Usage:     "Register webhook",
-	Flags: []cli.Flag{
-		&cli.StringFlag{
-			Name:     "id",
-			Usage:    "ID, optional",
-			Required: false,
-		},
-		&cli.StringFlag{
-			Name:    "event",
-			Aliases: []string{"e"},
-			Usage: "Event, one of: " + strings.Join(
-				slices.Map(smsgateway.WebhookEventTypes(), func(e smsgateway.WebhookEvent) string { return string(e) }),
-				", ",
-			),
-			Required: true,
-			Action: func(c *cli.Context, event string) error {
-				if !smsgateway.IsValidWebhookEvent(event) {
-					return cli.Exit("Invalid event", codes.ParamsError)
-				}
+func registerCmd() *cli.Command {
+	return &cli.Command{
+		Category:  "Webhooks",
+		Name:      "register",
+		Aliases:   []string{"r"},
+		ArgsUsage: "URL",
+		Usage:     "Register webhook",
+		Flags: []cli.Flag{
+			&cli.StringFlag{
+				Name:     "id",
+				Usage:    "ID, optional",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name: "device-id",
+				Usage: "Optional device ID for explicit selection. If not set, account-wide " +
+					"webhook will be registered.",
+				Required: false,
+			},
+			&cli.StringFlag{
+				Name:    "event",
+				Aliases: []string{"e"},
+				Usage: "Event, one of: " + strings.Join(
+					smsgateway.WebhookEventTypes(),
+					", ",
+				),
+				Required: true,
+				Action: func(_ *cli.Context, event string) error {
+					if !smsgateway.IsValidWebhookEvent(event) {
+						return cli.Exit("Invalid event", codes.ParamsError)
+					}
 
-				return nil
+					return nil
+				},
 			},
 		},
-	},
-	Action: func(c *cli.Context) error {
-		targetUrl := strings.TrimSpace(c.Args().Get(0))
-		if targetUrl == "" {
-			return cli.Exit("URL is empty", codes.ParamsError)
-		}
+		Action: func(c *cli.Context) error {
+			targetURL := strings.TrimSpace(c.Args().Get(0))
+			if targetURL == "" {
+				return cli.Exit("URL is empty", codes.ParamsError)
+			}
 
-		// accept only absolute http/https URLs
-		parsed, err := url.Parse(targetUrl)
-		if err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
-			return cli.Exit("invalid URL", codes.ParamsError)
-		}
+			// accept only absolute http/https URLs
+			parsed, err := url.Parse(targetURL)
+			if err != nil || parsed.Host == "" || (parsed.Scheme != "http" && parsed.Scheme != "https") {
+				return cli.Exit("invalid URL", codes.ParamsError)
+			}
 
-		client := metadata.GetClient(c.App.Metadata)
-		renderer := metadata.GetRenderer(c.App.Metadata)
+			var deviceID *string
+			if did := c.String("device-id"); did != "" {
+				deviceID = lo.ToPtr(did)
+			}
 
-		req := smsgateway.Webhook{
-			ID:    c.String("id"),
-			URL:   targetUrl,
-			Event: c.String("event"),
-		}
+			client := metadata.GetClient(c.App.Metadata)
+			renderer := metadata.GetRenderer(c.App.Metadata)
 
-		res, err := client.RegisterWebhook(c.Context, req)
-		if err != nil {
-			return cli.Exit(err.Error(), codes.ClientError)
-		}
+			req := smsgateway.Webhook{
+				ID:       c.String("id"),
+				URL:      targetURL,
+				Event:    c.String("event"),
+				DeviceID: deviceID,
+			}
 
-		b, err := renderer.Webhook(res)
-		if err != nil {
-			return cli.Exit(err.Error(), codes.OutputError)
-		}
-		fmt.Println(b)
+			res, err := client.RegisterWebhook(c.Context, req)
+			if err != nil {
+				return cli.Exit(err.Error(), codes.ClientError)
+			}
 
-		return nil
-	},
+			b, err := renderer.Webhook(res)
+			if err != nil {
+				return cli.Exit(err.Error(), codes.OutputError)
+			}
+			fmt.Fprintln(os.Stdout, b)
+
+			return nil
+		},
+	}
 }
