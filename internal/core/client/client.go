@@ -8,5 +8,6 @@ func New(username, password, endpoint string) *smsgateway.Client {
 		BaseURL:  endpoint,
 		User:     username,
 		Password: password,
+		Token:    "",
 	})
 }

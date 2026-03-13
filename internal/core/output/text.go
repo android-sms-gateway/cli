@@ -1,6 +1,8 @@
 package output
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -63,6 +65,42 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 			builder.WriteString(k)
 			builder.WriteString("\t")
 			builder.WriteString(v.Local().Format(time.RFC3339))
+		}
+	}
+
+	return builder.String(), nil
+}
+
+func (*TextOutput) Logs(src []smsgateway.LogEntry) (string, error) {
+	if len(src) == 0 {
+		return "Empty result", nil
+	}
+
+	builder := strings.Builder{}
+	for i, entry := range src {
+		builder.WriteString("ID: ")
+		builder.WriteString(strconv.FormatUint(entry.ID, 10))
+		builder.WriteString("\nPriority: ")
+		builder.WriteString(string(entry.Priority))
+		builder.WriteString("\nModule: ")
+		builder.WriteString(entry.Module)
+		builder.WriteString("\nMessage: ")
+		builder.WriteString(entry.Message)
+		builder.WriteString("\nCreated At: ")
+		builder.WriteString(entry.CreatedAt.Local().Format(time.RFC3339))
+
+		if len(entry.Context) > 0 {
+			builder.WriteString("\nContext:")
+			for k, v := range entry.Context {
+				builder.WriteString("\n\t")
+				builder.WriteString(k)
+				builder.WriteString(": ")
+				fmt.Fprintf(&builder, "%v", v)
+			}
+		}
+
+		if i < len(src)-1 {
+			builder.WriteString("\n---\n")
 		}
 	}
 

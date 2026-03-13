@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/android-sms-gateway/cli/internal/commands/logs"
 	"github.com/android-sms-gateway/cli/internal/commands/messages"
 	"github.com/android-sms-gateway/cli/internal/commands/webhooks"
 	"github.com/android-sms-gateway/cli/internal/config"
@@ -25,9 +26,10 @@ func main() {
 		os.Exit(codes.ParamsError)
 	}
 
-	cmds := make([]*cli.Command, 0, len(messages.Commands())+len(webhooks.Commands()))
+	cmds := make([]*cli.Command, 0, len(messages.Commands())+len(webhooks.Commands())+len(logs.Commands()))
 	cmds = append(cmds, messages.Commands()...)
 	cmds = append(cmds, webhooks.Commands()...)
+	cmds = append(cmds, logs.Commands()...)
 
 	app := &cli.App{
 		Name:     "smsgate",

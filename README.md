@@ -10,10 +10,10 @@
 <br />
 
 <div align="center">
-  <h3 align="center">SMS Gateway for Android™ CLI</h3>
+  <h3 align="center">SMSGate CLI</h3>
 
   <p align="center">
-    A command-line interface for interacting with the SMS Gateway for Android API
+    A command-line interface for interacting with the SMSGate API
     <br />
     <a href="https://docs.sms-gate.app/integration/cli/"><strong>Explore the docs »</strong></a>
     <br />
@@ -40,6 +40,9 @@
   - [Commands](#commands)
   - [Exit codes](#exit-codes)
   - [Examples](#examples)
+    - [Sending messages](#sending-messages)
+    - [Getting message status](#getting-message-status)
+    - [Getting logs](#getting-logs)
     - [Output formats](#output-formats-1)
 - [👥 Contributing](#-contributing)
 - [©️ License](#️-license)
@@ -130,10 +133,11 @@ smsgate [global options] command [command options] [arguments...]
 
 ### Commands
 
-The CLI offers two main groups of commands:
+The CLI offers three main groups of commands:
 
 - **Messages**: Commands for sending messages and checking their status.
 - **Webhooks**: Commands for managing webhooks, including creating, updating, and deleting them.
+- **Logs**: Commands for retrieving logs for a specific time range.
 
 For a complete list of available commands, you can:
 - Run `smsgate help` or `smsgate --help` in your terminal.
@@ -152,6 +156,14 @@ The CLI uses exit codes to indicate the outcome of operations:
 
 For security reasons, it is recommended to pass credentials using environment variables or a `.env` file.
 
+Credentials can also be passed via CLI options:
+
+```bash
+smsgate -u <username> -p <password> send --phones '+12025550123' 'Hello, Dr. Turk!'
+```
+
+#### Sending messages
+
 ```bash
 # Send a message
 smsgate send --phones '+12025550123' 'Hello, Dr. Turk!'
@@ -160,15 +172,28 @@ smsgate send --phones '+12025550123' 'Hello, Dr. Turk!'
 smsgate send --phones '+12025550123' --phones '+12025550124' 'Hello, doctors!'
 # or
 smsgate send --phones '+12025550123,+12025550124' 'Hello, doctors!'
+```
 
+#### Getting message status
+
+```bash
 # Get the status of a sent message
 smsgate status zXDYfTmTVf3iMd16zzdBj
 ```
 
-Credentials can also be passed via CLI options:
+#### Getting logs
+
+The `logs` command retrieves logs for a specific time range. Dates should be in RFC3339 format (e.g., `2024-01-15T10:30:00Z`).
 
 ```bash
-smsgate -u <username> -p <password> send --phones '+12025550123' 'Hello, Dr. Turk!'
+# Get logs for the last 24 hours (default)
+smsgate logs
+
+# Get logs for a specific time range
+smsgate logs --from '2024-01-15T00:00:00Z' --to '2024-01-15T23:59:59Z'
+
+# Get logs with custom time range and output format
+smsgate --format json logs --from '2024-01-15T10:00:00+07:00' --to '2024-01-15T18:00:00+07:00'
 ```
 
 #### Output formats
