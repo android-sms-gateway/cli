@@ -16,6 +16,7 @@ const (
 
 type Renderer interface {
 	MessageState(src smsgateway.MessageState) (string, error)
+	Logs(src []smsgateway.LogEntry) (string, error)
 	Webhook(src smsgateway.Webhook) (string, error)
 	Webhooks(src []smsgateway.Webhook) (string, error)
 	Success() (string, error)
