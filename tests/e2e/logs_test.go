@@ -17,6 +17,8 @@ import (
 )
 
 func TestLogs(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	from := time.Date(2025, 1, 10, 11, 0, 0, 0, time.UTC)
 	to := time.Date(2025, 1, 10, 12, 0, 0, 0, time.UTC)
 
@@ -47,7 +49,7 @@ func TestLogs(t *testing.T) {
 
 		var stdout, stderr bytes.Buffer
 		cmd := exec.Command(
-			"./smsgate",
+			binPath,
 			"--format", "json",
 			"logs",
 			"--from", from.Format(time.RFC3339),
@@ -72,7 +74,7 @@ func TestLogs(t *testing.T) {
 	t.Run("invalid range", func(t *testing.T) {
 		var stdout, stderr bytes.Buffer
 		cmd := exec.Command(
-			"./smsgate",
+			binPath,
 			"logs",
 			"--from", to.Format(time.RFC3339),
 			"--to", from.Format(time.RFC3339),

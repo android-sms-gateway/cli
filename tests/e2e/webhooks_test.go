@@ -15,6 +15,8 @@ import (
 )
 
 func TestWebhookRegisterValid(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name       string
 		url        string
@@ -88,7 +90,7 @@ func TestWebhookRegisterValid(t *testing.T) {
 
 			args = append(args, tt.url)
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -111,6 +113,8 @@ func TestWebhookRegisterValid(t *testing.T) {
 }
 
 func TestWebhookRegisterInvalid(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name     string
 		url      string
@@ -169,7 +173,7 @@ func TestWebhookRegisterInvalid(t *testing.T) {
 				args = append(args, tt.url)
 			}
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -184,6 +188,8 @@ func TestWebhookRegisterInvalid(t *testing.T) {
 }
 
 func TestWebhookList(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name          string
 		setupResponse func() []byte
@@ -233,7 +239,7 @@ func TestWebhookList(t *testing.T) {
 
 			var stdout, stderr bytes.Buffer
 			cmd := exec.Command(
-				"./smsgate",
+				binPath,
 				"--format", "json",
 				"webhooks", "list",
 			)
@@ -257,6 +263,8 @@ func TestWebhookList(t *testing.T) {
 }
 
 func TestWebhookDelete(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name        string
 		webhookID   string
@@ -315,7 +323,7 @@ func TestWebhookDelete(t *testing.T) {
 				args = append(args, tt.webhookID)
 			}
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -335,6 +343,8 @@ func TestWebhookDelete(t *testing.T) {
 }
 
 func TestWebhookCommandHelp(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name        string
 		args        []string
@@ -370,7 +380,7 @@ func TestWebhookCommandHelp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
-			cmd := exec.Command("./smsgate", tt.args...)
+			cmd := exec.Command(binPath, tt.args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
 			cmd.Stdout = &stdout

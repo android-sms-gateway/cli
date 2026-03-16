@@ -17,6 +17,8 @@ import (
 )
 
 func TestMessageSendValid(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name           string
 		message        string
@@ -173,7 +175,7 @@ func TestMessageSendValid(t *testing.T) {
 
 			args = append(args, tt.message)
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -194,6 +196,8 @@ func TestMessageSendValid(t *testing.T) {
 }
 
 func TestMessageSendInvalid(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name        string
 		message     string
@@ -277,7 +281,7 @@ func TestMessageSendInvalid(t *testing.T) {
 
 			args = append(args, tt.message)
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -292,6 +296,8 @@ func TestMessageSendInvalid(t *testing.T) {
 }
 
 func TestMessageSendAuthenticationError(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	mockServer := testutils.CreateMockServer(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusUnauthorized)
 		w.Write([]byte(`{"error": "Invalid credentials"}`))
@@ -305,7 +311,7 @@ func TestMessageSendAuthenticationError(t *testing.T) {
 		"Hello, world!",
 	}
 
-	cmd := exec.Command("./smsgate", args...)
+	cmd := exec.Command(binPath, args...)
 	cmd.Env = append([]string{}, os.Environ()...)
 	cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 	cmd.Env = append(cmd.Env, "ASG_USERNAME=wronguser", "ASG_PASSWORD=wrongpass")
@@ -318,6 +324,8 @@ func TestMessageSendAuthenticationError(t *testing.T) {
 }
 
 func TestMessageStatusValid(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name        string
 		messageID   string
@@ -359,7 +367,7 @@ func TestMessageStatusValid(t *testing.T) {
 				tt.messageID,
 			}
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -379,6 +387,8 @@ func TestMessageStatusValid(t *testing.T) {
 }
 
 func TestMessageStatusInvalid(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name        string
 		messageID   string
@@ -409,7 +419,7 @@ func TestMessageStatusInvalid(t *testing.T) {
 				args = append(args, tt.messageID)
 			}
 
-			cmd := exec.Command("./smsgate", args...)
+			cmd := exec.Command(binPath, args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, fmt.Sprintf("ASG_ENDPOINT=%s", mockServer.URL))
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
@@ -424,6 +434,8 @@ func TestMessageStatusInvalid(t *testing.T) {
 }
 
 func TestMessageCommandHelp(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	tests := []struct {
 		name        string
 		args        []string
@@ -447,7 +459,7 @@ func TestMessageCommandHelp(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			var stdout, stderr bytes.Buffer
-			cmd := exec.Command("./smsgate", tt.args...)
+			cmd := exec.Command(binPath, tt.args...)
 			cmd.Env = append([]string{}, os.Environ()...)
 			cmd.Env = append(cmd.Env, "ASG_USERNAME=testuser", "ASG_PASSWORD=testpass")
 			cmd.Stdout = &stdout
