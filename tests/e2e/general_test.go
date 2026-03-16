@@ -2,6 +2,7 @@ package e2e
 
 import (
 	"bytes"
+	"e2e/testutils"
 	"os/exec"
 	"testing"
 
@@ -9,10 +10,12 @@ import (
 )
 
 func TestHelpFlag(t *testing.T) {
+	binPath := testutils.RequireBinPath(t)
+
 	// Run the CLI binary with the --help flag
 	var stdout, stderr bytes.Buffer
 
-	cmd := exec.Command("./smsgate", "--help")
+	cmd := exec.Command(binPath, "--help")
 	cmd.Stdout = &stdout
 	cmd.Stderr = &stderr
 
