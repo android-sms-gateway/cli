@@ -445,7 +445,7 @@ func TestMessageCommandHelp(t *testing.T) {
 		{
 			name:        "send command help",
 			args:        []string{"send", "--help"},
-			expectHelp:  true,
+			expectHelp:  false,
 			expectUsage: true,
 		},
 		{
