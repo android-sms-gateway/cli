@@ -5,17 +5,49 @@ import (
 	"fmt"
 	"os"
 	"strings"
-	"time"
 
+	"github.com/android-sms-gateway/cli/internal/commands/flags"
 	"github.com/android-sms-gateway/cli/internal/core/codes"
 	"github.com/android-sms-gateway/cli/internal/utils/metadata"
 	"github.com/android-sms-gateway/client-go/smsgateway"
-	"github.com/samber/lo"
 	"github.com/urfave/cli/v2"
 )
 
 func sendCmd() *cli.Command {
 	const defaultDataPort = 53739
+
+	fl := []cli.Flag{
+		// Body fields
+		&cli.StringFlag{
+			Name:     "id",
+			Category: "Body",
+			Usage:    "Message ID",
+			Required: false,
+		},
+		&cli.StringSliceFlag{
+			Name:     "phones",
+			Category: "Body",
+			Aliases:  []string{"p", "phone"},
+			Usage:    "Phone numbers (E.164 format, e.g. +19162255887)",
+			Required: true,
+		},
+
+		// Data Message
+		&cli.BoolFlag{
+			Name:     "data",
+			Category: "Data Message",
+			Usage:    "Send data message instead of text, content should be base64 encoded",
+			Value:    false,
+		},
+		&cli.UintFlag{
+			Name:     "data-port",
+			Category: "Data Message",
+			Aliases:  []string{"dataPort"},
+			Usage:    "Destination port for data message (1 to 65535)",
+			Value:    defaultDataPort,
+		},
+	}
+	fl = append(fl, flags.Send()...)
 
 	return &cli.Command{
 		Name:      "send",
@@ -23,119 +55,13 @@ func sendCmd() *cli.Command {
 		Args:      true,
 		ArgsUsage: "Message content",
 		Category:  "Messages",
-		Flags: []cli.Flag{
-			// Body fields
-			&cli.StringFlag{
-				Name:     "id",
-				Usage:    "Message ID",
-				Required: false,
-			},
-			&cli.StringFlag{
-				Name:        "device-id",
-				Aliases:     []string{"device", "deviceId"},
-				Usage:       "Optional device ID for explicit selection",
-				DefaultText: "auto",
-			},
-			&cli.StringSliceFlag{
-				Name:     "phones",
-				Aliases:  []string{"p", "phone"},
-				Usage:    "Phone numbers (E.164 format, e.g. +19162255887)",
-				Required: true,
-			},
-			&cli.IntFlag{
-				Name:        "sim-number",
-				Aliases:     []string{"simNumber", "sim"},
-				Usage:       "SIM card index (one-based index, e.g. 1)",
-				DefaultText: "see device settings",
-			},
-			&cli.BoolFlag{
-				Name:    "delivery-report",
-				Aliases: []string{"deliveryReport"},
-				Usage:   "Enable delivery report",
-				Value:   true,
-			},
-			&cli.IntFlag{
-				Name:  "priority",
-				Usage: "Priority, use >= 100 to bypass all limits and delays (-128 to 127)",
-				Value: 0,
-			},
-			&cli.DurationFlag{
-				Name:        "ttl",
-				Usage:       "Time to live (duration, e.g. 1h30m)",
-				DefaultText: "unlimited",
-			},
-			&cli.TimestampFlag{
-				Name:     "valid-until",
-				Aliases:  []string{"validUntil"},
-				Usage:    "Valid until (RFC3339 format, e.g. 2006-01-02T15:04:05Z07:00)",
-				Layout:   time.RFC3339,
-				Timezone: time.Local,
-			},
-
-			// Data Message
-			&cli.BoolFlag{
-				Name:  "data",
-				Usage: "Send data message instead of text, content should be base64",
-				Value: false,
-			},
-			&cli.UintFlag{
-				Name:    "data-port",
-				Aliases: []string{"dataPort"},
-				Usage:   "Destination port for data message (1 to 65535)",
-				Value:   defaultDataPort,
-			},
-
-			// Query params
-			&cli.BoolFlag{
-				Name:    "skip-phone-validation",
-				Aliases: []string{"skipPhoneValidation"},
-				Usage:   "Skip phone number validation (default: false)",
-				Value:   false,
-			},
-			&cli.UintFlag{
-				Name:    "device-active-within",
-				Aliases: []string{"deviceActiveWithin"},
-				Usage:   "Filter devices active within the specified number of hours",
-				Value:   0,
-			},
-		},
-		Before: sendBefore,
-		Action: sendAction,
+		Flags:     fl,
+		Before:    sendBefore,
+		Action:    sendAction,
 	}
 }
 
 func sendBefore(c *cli.Context) error {
-	sim := c.Int("sim-number")
-	if sim < 0 || sim > 255 {
-		return cli.Exit("SIM card index must be between 0 and 255 (0 for default)", codes.ParamsError)
-	}
-
-	ttl := c.Duration("ttl")
-	validUntil := c.Timestamp("valid-until")
-	if ttl != 0 && validUntil != nil {
-		return cli.Exit("TTL and Valid Until flags are mutually exclusive", codes.ParamsError)
-	}
-
-	if ttl < 0 {
-		return cli.Exit("TTL must be positive", codes.ParamsError)
-	}
-
-	if validUntil != nil && validUntil.Before(time.Now()) {
-		return cli.Exit("Valid Until must be in the future", codes.ParamsError)
-	}
-
-	priority := c.Int("priority")
-	if priority < int(smsgateway.PriorityMinimum) || priority > int(smsgateway.PriorityMaximum) {
-		return cli.Exit(
-			fmt.Sprintf(
-				"Priority must be between %d and %d",
-				smsgateway.PriorityMinimum,
-				smsgateway.PriorityMaximum,
-			),
-			codes.ParamsError,
-		)
-	}
-
 	isDataMessage := c.Bool("data")
 	if !isDataMessage {
 		return nil
@@ -167,6 +93,10 @@ func sendAction(c *cli.Context) error {
 
 	client := metadata.GetClient(c.App.Metadata)
 	renderer := metadata.GetRenderer(c.App.Metadata)
+	sendFlags, err := flags.NewSendFlags(c)
+	if err != nil {
+		return cli.Exit(err.Error(), codes.ParamsError)
+	}
 
 	isDataMessage := c.Bool("data")
 	var dataMessage *smsgateway.DataMessage
@@ -182,45 +112,24 @@ func sendAction(c *cli.Context) error {
 		}
 	}
 
-	var simNumber *uint8
-	if sim := c.Int("sim-number"); sim > 0 {
-		simNumber = lo.ToPtr(uint8(sim)) //nolint:gosec // validated
-	}
-
-	var ttl *uint64
-	if ttlRaw := uint64(c.Duration("ttl").Seconds()); ttlRaw > 0 {
-		ttl = &ttlRaw
-	}
-
-	withDeliveryReport := c.Bool("delivery-report")
-
 	req := smsgateway.Message{
-		ID:       c.String("id"),
-		DeviceID: c.String("device-id"),
-
-		Message:     "",
-		TextMessage: textMessage,
-		DataMessage: dataMessage,
-
+		ID:           c.String("id"),
+		Message:      "",
+		TextMessage:  textMessage,
+		DataMessage:  dataMessage,
 		PhoneNumbers: c.StringSlice("phones"),
 		IsEncrypted:  false,
 
-		SimNumber:          simNumber,
-		WithDeliveryReport: &withDeliveryReport,
-		Priority:           smsgateway.MessagePriority(c.Int("priority")), //nolint:gosec // validated
-
-		TTL:        ttl,
-		ValidUntil: c.Timestamp("valid-until"),
+		DeviceID:           "",
+		SimNumber:          nil,
+		WithDeliveryReport: nil,
+		Priority:           0,
+		TTL:                nil,
+		ValidUntil:         nil,
 	}
+	req = sendFlags.Merge(req)
 
-	options := []smsgateway.SendOption{}
-
-	if c.Bool("skip-phone-validation") {
-		options = append(options, smsgateway.WithSkipPhoneValidation(true))
-	}
-	if v := c.Uint("device-active-within"); v > 0 {
-		options = append(options, smsgateway.WithDeviceActiveWithin(v))
-	}
+	options := sendFlags.Option()
 
 	res, err := client.Send(c.Context, req, options...)
 	if err != nil {

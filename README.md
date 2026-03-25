@@ -41,6 +41,7 @@
   - [Exit codes](#exit-codes)
   - [Examples](#examples)
     - [Sending messages](#sending-messages)
+    - [Batch message sending](#batch-message-sending)
     - [Getting message status](#getting-message-status)
     - [Getting logs](#getting-logs)
     - [Output formats](#output-formats-1)
@@ -55,7 +56,7 @@
 There are two CLI tools in this repository: `smsgate` and `smsgate-ca`. The first one is for SMS Gateway for Android itself, and the second one is for the Certificate Authority.
 
 This CLI provides a robust interface for:
-- Sending and managing SMS messages
+- Sending and managing SMS messages (including batch operations from CSV and Excel files)
 - Configuring webhook integrations
 - Issuing certificates for private deployments
 
@@ -71,7 +72,7 @@ This CLI provides a robust interface for:
 
 ### Prerequisites
 
-- Go 1.23+ (for building from source)
+- Go 1.25+ (for building from source)
 - Docker (optional, for containerized execution)
 
 ### Installation
@@ -135,7 +136,7 @@ smsgate [global options] command [command options] [arguments...]
 
 The CLI offers three main groups of commands:
 
-- **Messages**: Commands for sending messages and checking their status.
+- **Messages**: Commands for sending messages and checking their status, including batch operations from CSV and Excel files.
 - **Webhooks**: Commands for managing webhooks, including creating, updating, and deleting them.
 - **Logs**: Commands for retrieving logs for a specific time range.
 
@@ -164,15 +165,183 @@ smsgate -u <username> -p <password> send --phones '+12025550123' 'Hello, Dr. Tur
 
 #### Sending messages
 
+The `send` command supports various options to customize message delivery:
+
 ```bash
-# Send a message
+# Send a simple text message
 smsgate send --phones '+12025550123' 'Hello, Dr. Turk!'
 
-# Send a message to multiple numbers
+# Send to multiple numbers
 smsgate send --phones '+12025550123' --phones '+12025550124' 'Hello, doctors!'
 # or
 smsgate send --phones '+12025550123,+12025550124' 'Hello, doctors!'
+
+# Send with explicit device selection
+smsgate send --phones '+12025550123' --device-id device123 'Message'
+
+# Send with SIM number selection (1-based)
+smsgate send --phones '+12025550123' --sim-number 2 'Message'
+
+# Send with priority (>=100 bypasses limits)
+smsgate send --phones '+12025550123' --priority 100 'Urgent message'
+
+# Send with time-to-live (TTL)
+smsgate send --phones '+12025550123' --ttl 1h30m 'Expiring message'
+
+# Send with expiration date (RFC3339 format)
+smsgate send --phones '+12025550123' --valid-until '2024-12-31T23:59:59Z' 'Message'
+
+# Disable delivery report
+smsgate send --phones '+12025550123' --delivery-report=false 'Message'
+
+# Skip phone number validation
+smsgate send --phones '+12025550123' --skip-phone-validation 'Message'
+
+# Filter by device activity (devices active within last 12 hours)
+smsgate send --phones '+12025550123' --device-active-within 12 'Message'
+
+# Send data message (base64 encoded)
+echo -n 'hello world' | base64
+smsgate send --phones '+12025550123' --data --data-port 12345 'aGVsbG8gd29ybGQ='
 ```
+
+**Send command options:**
+
+| Option                      | Description                                                                                                                                               | Default Value | Example                 |
+| --------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- | ----------------------- |
+| `--id`                      | A unique message ID. If not provided, one will be automatically generated.                                                                                | empty         | `zXDYfTmTVf3iMd16zzdBj` |
+| `--device-id`, `--device`   | Optional device ID for explicit selection. If not provided, a random device will be selected.                                                             | empty         | `oi2i20J8xVP1ct5neqGZt` |
+| `--phones`, `--phone`, `-p` | Specifies the recipient's phone number(s). This option can be used multiple times or accepts comma-separated values. Numbers must be in E.164 format.     | **required**  | `+12025550123`          |
+| `--sim-number`, `--sim`     | The one-based SIM card slot number. If not specified, the device's SIM rotation feature will be used.                                                     | empty         | `2`                     |
+| `--delivery-report`         | Enables delivery report for the message.                                                                                                                  | `true`        | `true` / `false`        |
+| `--priority`                | Sets the priority of the message. Messages with priority >= 100 bypass all limits and delays. Range: -128 to 127.                                         | `0`           | `100`                   |
+| **Data Message**            |                                                                                                                                                           |               |                         |
+| `--data`                    | Send data message instead of text (content must be base64 encoded).                                                                                       | `false`       | `true`                  |
+| `--data-port`               | Destination port for data message (1 to 65535).                                                                                                           | `53739`       | `12345`                 |
+| **Options**                 |                                                                                                                                                           |               |                         |
+| `--ttl`                     | Time-to-live (TTL) for the message. Duration format (e.g., `1h30m`). If not provided, the message will not expire.<br>**Conflicts with `--valid-until`.** | empty         | `1h30m`                 |
+| `--valid-until`             | The expiration date and time for the message. RFC3339 format (e.g., `2006-01-02T15:04:05Z07:00`).<br>**Conflicts with `--ttl`.**                          | empty         | `2024-12-31T23:59:59Z`  |
+| `--skip-phone-validation`   | Skip phone number validation.                                                                                                                             | `false`       | `true`                  |
+| `--device-active-within`    | Time window in hours for device activity filtering. `0` means no filtering.                                                                               | `0`           | `12`                    |
+
+#### Batch message sending
+
+The CLI supports sending messages in bulk from CSV and Excel files. The `batch send` command also supports the shared delivery/device options from `send` (such as `--device-id`, `--sim-number`, `--priority`, `--ttl`, `--valid-until`, `--delivery-report`, `--skip-phone-validation`, `--device-active-within`), allowing fine-grained control over each message in the batch.
+
+**Supported file formats:**
+- **CSV** (Comma-Separated Values)
+- **XLSX** (Excel files)
+
+**Basic usage:**
+
+```bash
+# Send messages from a CSV file
+smsgate batch send contacts.csv --map phone=Phone,text=Message
+
+# Send messages from an Excel file with specific sheet
+smsgate batch send campaign.xlsx --sheet Sheet1 --map phone=Phone,text=Message
+
+# Send with custom delimiter and no header
+smsgate batch send data.csv --delimiter ';' --header=false --map phone=col_1,text=col_2
+```
+
+**Batch-specific options:**
+
+| Option                | Description                                        | Default Value | Example                    |
+| --------------------- | -------------------------------------------------- | ------------- | -------------------------- |
+| `--sheet`             | Sheet name (defaults to first sheet)               | empty         | `Sheet1`                   |
+| `--delimiter`         | CSV delimiter character                            | `,`           | `;`                        |
+| `--header`            | Treat first row as header                          | `true`        | `false`                    |
+| `--map`               | Column mapping (required)                          | **required**  | `phone=Phone,text=Message` |
+| `--dry-run`           | Validate and print normalized rows without sending | `false`       | `true`                     |
+| `--validate-only`     | Validate input only (no preview, no sending)       | `false`       | `true`                     |
+| `--concurrency`       | Number of concurrent send workers                  | CPU cores     | `5`                        |
+| `--continue-on-error` | Continue sending after per-row failures            | `false`       | `true`                     |
+
+**Inherited message options:**
+The shared delivery/device options from the `send` command are also available (e.g., `--device-id`, `--sim-number`, `--priority`, `--ttl`, `--valid-until`, `--delivery-report`, `--skip-phone-validation`, `--device-active-within`). These apply to every message sent in the batch.
+
+**Column mapping:**
+
+The `--map` option defines how columns in your file map to message fields:
+
+| Field        | Required | Description                                   |
+| ------------ | -------- | --------------------------------------------- |
+| `phone`      | ✅        | Phone number column                           |
+| `text`       | ✅        | Message text column                           |
+| `id`         | ❌        | Message ID column (UUID generated when empty) |
+| `device_id`  | ❌        | Device identifier column                      |
+| `sim_number` | ❌        | SIM number column (1-255)                     |
+| `priority`   | ❌        | Message priority column (-128 to 127)         |
+
+**Mapping examples:**
+
+```bash
+# Basic mapping with headers
+smsgate batch send --map phone=Phone,text=Message contacts.csv
+
+# Excel file with specific sheet
+smsgate batch send --sheet Sheet1 --map phone=Phone,text=Message campaign.xlsx
+
+# No headers, column positions
+smsgate batch send --header=false --map phone=col_1,text=col_2 data.csv
+
+# Full mapping with optional fields
+smsgate batch send --map phone=Phone,text=Message,device_id=Device,sim_number=SIM,priority=Priority contacts.csv
+```
+
+**File format examples:**
+
+**CSV with Headers:**
+```csv
+Phone,Message,Device,Priority
++12025550123,"Hello Dr. Turk!",device1,1
++12025550124,"Hello Dr. Smith!",device1,2
++12025550125,"Hello Dr. Jones!",device2,1
+```
+
+**CSV without Headers:**
+```csv
++12025550123,"Hello Dr. Turk!",device1,1
++12025550124,"Hello Dr. Smith!",device1,2
++12025550125,"Hello Dr. Jones!",device2,1
+```
+
+**Excel Files:**
+- Supports multiple sheets (use `--sheet` to specify)
+- First row treated as headers by default
+- Column mapping works the same as CSV
+
+**Workflow modes:**
+
+1. **Validation Only** - Validates file format and column mapping, checks required fields, exits without sending:
+   ```bash
+   smsgate batch send --map phone=Phone,text=Message --validate-only contacts.csv
+   ```
+
+2. **Dry Run** - Validates and processes all rows, shows what would be sent without actually sending:
+   ```bash
+   smsgate batch send --map phone=Phone,text=Message --dry-run contacts.csv
+   ```
+
+3. **Full Send** - Sends all messages with real-time progress:
+   ```bash
+   smsgate batch send --map phone=Phone,text=Message --concurrency=5 contacts.csv
+   ```
+
+**Output and error handling:**
+
+- **Summary**: `Batch send summary: total=100 enqueued=95 failed=3 skipped=2`
+- **Real-time progress**: Shows each message's UUID and state during sending
+- **Error handling**: By default stops on first error; use `--continue-on-error` to send all rows even if some fail
+
+**Best practices:**
+
+1. Always use `--dry-run` or `--validate-only` first to test your configuration
+2. Ensure phone numbers are in E.164 format
+3. Start with lower concurrency values and increase as needed
+4. Use `--continue-on-error` for non-critical bulk sends
+5. Combine with inherited message options (e.g., `--device-id`, `--priority`) for advanced scenarios
 
 #### Getting message status
 
