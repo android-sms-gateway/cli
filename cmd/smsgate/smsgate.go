@@ -16,6 +16,11 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	categoryConfiguration = "Configuration"
+	categoryOutput        = "Output"
+)
+
 var (
 	version = "0.0.0"
 )
@@ -41,7 +46,7 @@ func main() {
 				Name:        "endpoint",
 				DefaultText: config.DefaultEndpoint,
 				Usage:       "Endpoint",
-				Category:    "Configuration",
+				Category:    categoryConfiguration,
 				Aliases:     []string{"e"},
 				Value:       config.DefaultEndpoint,
 				EnvVars: []string{
@@ -52,7 +57,7 @@ func main() {
 				Name:     "username",
 				Aliases:  []string{"u"},
 				Usage:    "Username",
-				Category: "Configuration",
+				Category: categoryConfiguration,
 				EnvVars: []string{
 					"ASG_USERNAME",
 				},
@@ -62,7 +67,7 @@ func main() {
 				Name:     "password",
 				Aliases:  []string{"p"},
 				Usage:    "Password",
-				Category: "Configuration",
+				Category: categoryConfiguration,
 				EnvVars: []string{
 					"ASG_PASSWORD",
 				},
@@ -71,7 +76,7 @@ func main() {
 
 			&cli.StringFlag{
 				Name:     "format",
-				Category: "Output",
+				Category: categoryOutput,
 				Usage:    "Output format. Supported: text, json, raw",
 				Required: false,
 				Value:    string(output.Text),

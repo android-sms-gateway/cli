@@ -126,6 +126,7 @@ func sendAction(c *cli.Context) error {
 		Priority:           0,
 		TTL:                nil,
 		ValidUntil:         nil,
+		ScheduleAt:         nil,
 	}
 	req = sendFlags.Merge(req)
 

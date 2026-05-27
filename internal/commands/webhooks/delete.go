@@ -11,7 +11,7 @@ import (
 
 func deleteCmd() *cli.Command {
 	return &cli.Command{
-		Category:  "Webhooks",
+		Category:  categoryWebhooks,
 		Name:      "delete",
 		Aliases:   []string{"d", "rm", "remove"},
 		Usage:     "Delete webhook",
