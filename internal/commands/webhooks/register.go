@@ -15,7 +15,7 @@ import (
 
 func registerCmd() *cli.Command {
 	return &cli.Command{
-		Category:  "Webhooks",
+		Category:  categoryWebhooks,
 		Name:      "register",
 		Aliases:   []string{"r"},
 		ArgsUsage: "URL",

@@ -7,7 +7,7 @@ import (
 func Commands() []*cli.Command {
 	return []*cli.Command{
 		{
-			Category: "Webhooks",
+			Category: categoryWebhooks,
 			Name:     "webhooks",
 			Aliases:  []string{"w", "wh"},
 			Usage:    "Manage webhooks",

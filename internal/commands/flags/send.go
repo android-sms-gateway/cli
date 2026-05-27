@@ -9,62 +9,75 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+const (
+	categoryOptions = "Options"
+	categoryBody    = "Body"
+)
+
 func Send() []cli.Flag {
 	return []cli.Flag{
 		// Body fields
 		&cli.StringFlag{
 			Name:        "device-id",
 			Aliases:     []string{"device", "deviceId"},
-			Category:    "Body",
+			Category:    categoryBody,
 			Usage:       "Optional device ID for explicit selection",
 			DefaultText: "auto",
 		},
 		&cli.UintFlag{
 			Name:        "sim-number",
 			Aliases:     []string{"simNumber", "sim"},
-			Category:    "Body",
+			Category:    categoryBody,
 			Usage:       "SIM card index (one-based index, e.g. 1)",
 			DefaultText: "see device settings",
 		},
 		&cli.BoolFlag{
 			Name:     "delivery-report",
 			Aliases:  []string{"deliveryReport"},
-			Category: "Body",
+			Category: categoryBody,
 			Usage:    "Enable delivery report",
 			Value:    true,
 		},
 		&cli.IntFlag{
 			Name:     "priority",
-			Category: "Body",
+			Category: categoryBody,
 			Usage:    "Priority, use >= 100 to bypass all limits and delays (-128 to 127)",
 			Value:    0,
 		},
 
 		&cli.DurationFlag{
 			Name:        "ttl",
-			Category:    "Options",
+			Category:    categoryOptions,
 			Usage:       "Time to live (duration, e.g. 1h30m)",
 			DefaultText: "unlimited",
 		},
 		&cli.TimestampFlag{
 			Name:     "valid-until",
 			Aliases:  []string{"validUntil"},
-			Category: "Options",
+			Category: categoryOptions,
 			Usage:    "Valid until (RFC3339 format, e.g. 2006-01-02T15:04:05Z07:00)",
+			Layout:   time.RFC3339,
+			Timezone: time.Local,
+		},
+		&cli.TimestampFlag{
+			Name:     "schedule-at",
+			Aliases:  []string{"scheduleAt"},
+			Category: categoryOptions,
+			Usage:    "Schedule message delivery at a specific time (RFC3339 format, e.g. 2006-01-02T15:04:05Z07:00)",
 			Layout:   time.RFC3339,
 			Timezone: time.Local,
 		},
 		&cli.BoolFlag{
 			Name:     "skip-phone-validation",
 			Aliases:  []string{"skipPhoneValidation"},
-			Category: "Options",
+			Category: categoryOptions,
 			Usage:    "Skip phone number validation",
 			Value:    false,
 		},
 		&cli.UintFlag{
 			Name:     "device-active-within",
 			Aliases:  []string{"deviceActiveWithin"},
-			Category: "Options",
+			Category: categoryOptions,
 			Usage:    "Filter devices active within the specified number of hours",
 			Value:    0,
 		},
@@ -78,6 +91,7 @@ type SendFlags struct {
 	Priority            smsgateway.MessagePriority
 	TTL                 *uint64
 	ValidUntil          *time.Time
+	ScheduleAt          *time.Time
 	SkipPhoneValidation bool
 	DeviceActiveWithin  uint
 }
@@ -91,6 +105,7 @@ func NewSendFlags(c *cli.Context) (*SendFlags, error) {
 		ValidUntil:          c.Timestamp("valid-until"),
 		SkipPhoneValidation: c.Bool("skip-phone-validation"),
 		DeviceActiveWithin:  c.Uint("device-active-within"),
+		ScheduleAt:          c.Timestamp("schedule-at"),
 
 		SimNumber: nil,
 		Priority:  smsgateway.PriorityDefault,
@@ -126,6 +141,16 @@ func NewSendFlags(c *cli.Context) (*SendFlags, error) {
 		)
 	}
 	fl.ValidUntil = validUntil
+
+	scheduleAt := c.Timestamp("schedule-at")
+	if scheduleAt != nil && !scheduleAt.After(time.Now()) {
+		return nil, fmt.Errorf(
+			"%w: Schedule At must be in the future: %s",
+			ErrValidationFailed,
+			scheduleAt.Format(time.RFC3339),
+		)
+	}
+	fl.ScheduleAt = scheduleAt
 
 	priority := c.Int(
 		"priority",
@@ -164,6 +189,7 @@ func (s SendFlags) Merge(src smsgateway.Message) smsgateway.Message {
 		Priority:           lo.CoalesceOrEmpty(src.Priority, s.Priority),
 		TTL:                lo.CoalesceOrEmpty(src.TTL, s.TTL),
 		ValidUntil:         lo.CoalesceOrEmpty(src.ValidUntil, s.ValidUntil),
+		ScheduleAt:         lo.CoalesceOrEmpty(src.ScheduleAt, s.ScheduleAt),
 	}
 }
 

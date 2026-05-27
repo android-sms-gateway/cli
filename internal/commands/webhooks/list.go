@@ -11,7 +11,7 @@ import (
 
 func listCmd() *cli.Command {
 	return &cli.Command{
-		Category: "Webhooks",
+		Category: categoryWebhooks,
 		Name:     "list",
 		Aliases:  []string{"l", "ls"},
 		Usage:    "List webhooks",
