@@ -73,7 +73,7 @@ func (*TextOutput) MessageState(src smsgateway.MessageState) (string, error) {
 
 func (*TextOutput) Logs(src []smsgateway.LogEntry) (string, error) {
 	if len(src) == 0 {
-		return "Empty result", nil
+		return EmptyResult, nil
 	}
 
 	builder := strings.Builder{}
@@ -126,7 +126,7 @@ func (*TextOutput) Webhook(src smsgateway.Webhook) (string, error) {
 // Returns the formatted string and any error encountered during formatting.
 func (o *TextOutput) Webhooks(src []smsgateway.Webhook) (string, error) {
 	if len(src) == 0 {
-		return "Empty result", nil
+		return EmptyResult, nil
 	}
 
 	builder := strings.Builder{}
