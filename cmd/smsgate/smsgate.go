@@ -77,7 +77,7 @@ func main() {
 			&cli.StringFlag{
 				Name:     "format",
 				Category: categoryOutput,
-				Usage:    "Output format. Supported: text, json, raw",
+				Usage:    "Output format. Supported: text, json, raw, table",
 				Required: false,
 				Value:    string(output.Text),
 				Aliases:  []string{"f"},

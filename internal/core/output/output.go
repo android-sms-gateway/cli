@@ -9,9 +9,10 @@ import (
 type Format string
 
 const (
-	Text Format = "text"
-	JSON Format = "json"
-	RAW  Format = "raw"
+	Text  Format = "text"
+	JSON  Format = "json"
+	RAW   Format = "raw"
+	Table Format = "table"
 )
 
 type Renderer interface {
@@ -21,6 +22,8 @@ type Renderer interface {
 	Webhooks(src []smsgateway.Webhook) (string, error)
 	Success() (string, error)
 }
+
+const EmptyResult = "Empty result"
 
 var ErrUnsupportedFormat = errors.New("unsupported format")
 
@@ -32,6 +35,8 @@ func New(format Format) (Renderer, error) {
 		return NewJSONOutput(), nil
 	case RAW:
 		return NewRawOutput(), nil
+	case Table:
+		return NewTableOutput(), nil
 	default:
 		return nil, ErrUnsupportedFormat
 	}

@@ -116,11 +116,12 @@ The CLI can be configured using environment variables or command-line flags. You
 
 ### Output Formats
 
-The CLI supports three output formats:
+The CLI supports four output formats:
 
 1. `text`: Human-readable text output (default)
 2. `json`: Pretty printed JSON-formatted output
 3. `raw`: One-line JSON-formatted output
+4. `table`: Tab-aligned columnar output for lists and sub-tables
 
 Please note that when the exit code is not `0`, the error description is printed to stderr without any formatting.
 
@@ -405,6 +406,14 @@ Recipients:
 
 ```json
 {"id":"zXDYfTmTVf3iMd16zzdBj","state":"Pending","isHashed":false,"isEncrypted":false,"recipients":[{"phoneNumber":"+12025550123","state":"Pending"},{"phoneNumber":"+12025550124","state":"Pending"}],"states":{}}
+```
+
+**Table**
+
+```text
+ID                                    EVENT          URL                              DEVICE ID
+123e4567-e89b-12d3-a456-426614174000  sms:received   https://example.com/webhook      dev-abc
+def45678-e89b-12d3-a456-426614174000  sms:sent       https://example.com/other        
 ```
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
