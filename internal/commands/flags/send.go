@@ -180,6 +180,7 @@ func (s SendFlags) Merge(src smsgateway.Message) smsgateway.Message {
 		Message:      src.Message,
 		TextMessage:  src.TextMessage,
 		DataMessage:  src.DataMessage,
+		MmsMessage:   src.MmsMessage,
 		PhoneNumbers: src.PhoneNumbers,
 		IsEncrypted:  src.IsEncrypted,
 

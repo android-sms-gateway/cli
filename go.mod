@@ -3,7 +3,7 @@ module github.com/android-sms-gateway/cli
 go 1.25.0
 
 require (
-	github.com/android-sms-gateway/client-go v1.12.10
+	github.com/android-sms-gateway/client-go v1.15.0
 	github.com/google/uuid v1.6.0
 	github.com/joho/godotenv v1.5.1
 	github.com/samber/lo v1.53.0
@@ -15,7 +15,6 @@ require (
 require (
 	github.com/cpuguy83/go-md2man/v2 v2.0.7 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/richardlehane/mscfb v1.0.6 // indirect
 	github.com/richardlehane/msoleps v1.0.6 // indirect
