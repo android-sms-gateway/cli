@@ -25,42 +25,47 @@
 </div>
 
 <!-- TABLE OF CONTENTS -->
-- [📱 About The Project](#-about-the-project)
-  - [⚙️ Built With](#️-built-with)
-- [💻 Getting Started](#-getting-started)
+- [About The Project](#about-the-project)
+  - [Built With](#built-with)
+- [Getting Started](#getting-started)
   - [Prerequisites](#prerequisites)
   - [Installation](#installation)
     - [Option 1: Download from GitHub Releases](#option-1-download-from-github-releases)
     - [Option 2: Install using Go](#option-2-install-using-go)
     - [Option 3: Docker](#option-3-docker)
-- [💻 Configuration](#-configuration)
+- [Configuration](#configuration)
   - [Available Options](#available-options)
   - [Output Formats](#output-formats)
-- [💻 Usage](#-usage)
+- [Usage](#usage)
   - [Commands](#commands)
   - [Exit codes](#exit-codes)
   - [Examples](#examples)
     - [Sending messages](#sending-messages)
     - [Batch message sending](#batch-message-sending)
     - [Getting message status](#getting-message-status)
+    - [Managing webhooks](#managing-webhooks)
     - [Getting logs](#getting-logs)
     - [Output formats](#output-formats-1)
-- [👥 Contributing](#-contributing)
-- [©️ License](#️-license)
-- [⚠️ Legal Notice](#️-legal-notice)
+- [Certificate Authority (smsgate-ca)](#certificate-authority-smsgate-ca)
+  - [Global Flags](#global-flags)
+  - [Commands](#commands-1)
+    - [`webhooks`](#webhooks)
+    - [`private`](#private)
+  - [Command Flags](#command-flags)
+- [Contributing](#contributing)
+- [License](#license)
+- [Legal Notice](#legal-notice)
 
 
 <!-- ABOUT THE PROJECT -->
-## 📱 About The Project
+## About The Project
 
-There are two CLI tools in this repository: `smsgate` and `smsgate-ca`. The first one is for SMS Gateway for Android itself, and the second one is for the Certificate Authority.
+There are two CLI tools in this repository:
 
-This CLI provides a robust interface for:
-- Sending and managing SMS messages (including batch operations from CSV and Excel files)
-- Configuring webhook integrations
-- Issuing certificates for private deployments
+- **`smsgate`** -- Interact with the [SMS Gateway for Android](https://sms-gate.app) API to send SMS/MMS messages, manage webhooks, and retrieve logs.
+- **`smsgate-ca`** -- Issue TLS certificates for private deployments (webhook receivers and private servers on RFC 1918 addresses).
 
-### ⚙️ Built With
+### Built With
 
 - [![Go][Go-shield]][Go-url]
 - [![Goreleaser][Goreleaser-shield]][Goreleaser-url]
@@ -68,7 +73,7 @@ This CLI provides a robust interface for:
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 <!-- GETTING STARTED -->
-## 💻 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -101,9 +106,9 @@ docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli \
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 💻 Configuration
+## Configuration
 
-The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables.
+The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables (loaded automatically via [godotenv](https://github.com/joho/godotenv)).
 
 ### Available Options
 
@@ -127,7 +132,7 @@ Please note that when the exit code is not `0`, the error description is printed
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 💻 Usage
+## Usage
 
 ```bash
 smsgate [global options] command [command options] [arguments...]
@@ -137,8 +142,8 @@ smsgate [global options] command [command options] [arguments...]
 
 The CLI offers three main groups of commands:
 
-- **Messages**: Commands for sending messages and checking their status, including batch operations from CSV and Excel files.
-- **Webhooks**: Commands for managing webhooks, including creating, updating, and deleting them.
+- **Messages**: Commands for sending SMS, MMS, and data messages, and checking their status, including batch operations from CSV and Excel files.
+- **Webhooks**: Commands for managing webhooks, including registering, listing, and deleting them.
 - **Logs**: Commands for retrieving logs for a specific time range.
 
 For a complete list of available commands, you can:
@@ -153,6 +158,7 @@ The CLI uses exit codes to indicate the outcome of operations:
 - `1`: invalid options or arguments
 - `2`: server request error
 - `3`: output formatting error
+- `4`: internal error
 
 ### Examples
 
@@ -190,7 +196,7 @@ smsgate send --phones '+12025550123' --priority 100 'Urgent message'
 smsgate send --phones '+12025550123' --ttl 1h30m 'Expiring message'
 
 # Send with expiration date (RFC3339 format)
-smsgate send --phones '+12025550123' --valid-until '2024-12-31T23:59:59Z' 'Message'
+smsgate send --phones '+12025550123' --valid-until '2026-12-31T23:59:59Z' 'Message'
 
 # Disable delivery report
 smsgate send --phones '+12025550123' --delivery-report=false 'Message'
@@ -204,7 +210,27 @@ smsgate send --phones '+12025550123' --device-active-within 12 'Message'
 # Send data message (base64 encoded)
 echo -n 'hello world' | base64
 smsgate send --phones '+12025550123' --data --data-port 12345 'aGVsbG8gd29ybGQ='
+
+# Send MMS with subject and multiple attachments
+smsgate send --mms --subject 'Project update' --phones '+12025550123' \
+  --attachment /path/to/report.pdf \
+  --attachment /path/to/chart.png \
+  'Here are the latest documents'
+
+# Send MMS with attachments only (no text)
+smsgate send --mms --phones '+12025550123' \
+  --attachment /path/to/photo.jpg
+
+# Send MMS to multiple recipients
+smsgate send --mms --phones '+12025550123' --phones '+12025550124' \
+  --subject 'Team update' --attachment /path/to/screenshot.png \
+  'Please review'
 ```
+
+**Notes:**
+- `--data` and `--mms` are mutually exclusive.
+- At least one of text or an attachment is required for MMS.
+- MIME type is detected from the file extension (falls back to `application/octet-stream`).
 
 **Send command options:**
 
@@ -219,11 +245,16 @@ smsgate send --phones '+12025550123' --data --data-port 12345 'aGVsbG8gd29ybGQ='
 | **Data Message**            |                                                                                                                                                           |               |                         |
 | `--data`                    | Send data message instead of text (content must be base64 encoded).                                                                                       | `false`       | `true`                  |
 | `--data-port`               | Destination port for data message (1 to 65535).                                                                                                           | `53739`       | `12345`                 |
+| **MMS Message**             |                                                                                                                                                           |               |                         |
+| `--mms`                     | Send MMS message instead of text; text is optional when at least one attachment is provided.                                                              | `false`       | `true`                  |
+| `--subject`                 | MMS subject line. Requires `--mms`.                                                                                                                       | empty         | `Photo update`          |
+| `--attachment`              | Path to an attachment file. Repeatable; MIME type is detected from the file extension. Requires `--mms`.                                                  | empty         | `/path/to/image.jpg`    |
 | **Options**                 |                                                                                                                                                           |               |                         |
 | `--ttl`                     | Time-to-live (TTL) for the message. Duration format (e.g., `1h30m`). If not provided, the message will not expire.<br>**Conflicts with `--valid-until`.** | empty         | `1h30m`                 |
-| `--valid-until`             | The expiration date and time for the message. RFC3339 format (e.g., `2006-01-02T15:04:05Z07:00`).<br>**Conflicts with `--ttl`.**                          | empty         | `2024-12-31T23:59:59Z`  |
+| `--valid-until`             | The expiration date and time for the message. RFC3339 format (e.g., `2006-01-02T15:04:05Z07:00`).<br>**Conflicts with `--ttl`.**                          | empty         | `2026-12-31T23:59:59Z`  |
 | `--skip-phone-validation`   | Skip phone number validation.                                                                                                                             | `false`       | `true`                  |
 | `--device-active-within`    | Time window in hours for device activity filtering. `0` means no filtering.                                                                               | `0`           | `12`                    |
+| `--schedule-at`             | Schedule delivery time (RFC3339 format). If not provided, the message is sent immediately.<br>**Example:** `2026-12-31T23:59:59Z`.                        | immediate     | `2026-12-31T23:59:59Z`  |
 
 #### Batch message sending
 
@@ -351,6 +382,24 @@ Phone,Message,Device,Priority
 smsgate status zXDYfTmTVf3iMd16zzdBj
 ```
 
+#### Managing webhooks
+
+```bash
+# Register a webhook for SMS received events
+smsgate webhooks register -e sms:received https://example.com/webhook
+
+# Register a device-specific webhook
+smsgate webhooks register -e sms:sent --device-id device123 https://example.com/webhook
+
+# List all registered webhooks
+smsgate webhooks list
+
+# Delete a webhook by ID
+smsgate webhooks delete <webhook-id>
+```
+
+**Supported webhook events:** `sms:received`, `sms:sent`, `sms:failed`, `device:connected`, `device:disconnected`
+
 #### Getting logs
 
 The `logs` command retrieves logs for a specific time range. Dates should be in RFC3339 format (e.g., `2024-01-15T10:30:00Z`).
@@ -418,7 +467,50 @@ def45678-e89b-12d3-a456-426614174000  sms:sent       https://example.com/other
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## 👥 Contributing
+## Certificate Authority (smsgate-ca)
+
+The `smsgate-ca` tool issues TLS certificates for private deployments. It generates ECDSA P-256 certificates signed by the SMS Gateway CA.
+
+```bash
+smsgate-ca [global flags] <command> [command flags] [arguments]
+```
+
+### Global Flags
+
+| Flag        | Aliases | Env Var          | Default | Description     |
+| ----------- | ------- | ---------------- | ------- | --------------- |
+| `--timeout` | `-t`    | `ASG_CA_TIMEOUT` | `30s`   | Request timeout |
+
+### Commands
+
+#### `webhooks`
+
+Issue a TLS certificate for a webhook receiver running on a private IP address.
+
+```bash
+smsgate-ca webhooks <ip-address> --out server.crt --keyout server.key
+```
+
+#### `private`
+
+Issue a TLS certificate for a private server running on a private IP address.
+
+```bash
+smsgate-ca private <ip-address> --out server.crt --keyout server.key
+```
+
+### Command Flags
+
+| Flag       | Default      | Description             |
+| ---------- | ------------ | ----------------------- |
+| `--out`    | `server.crt` | Certificate output file |
+| `--keyout` | `server.key` | Private key output file |
+
+**Note:** The IP address must be a private/RFC 1918 address (e.g., `10.x.x.x`, `172.16.x.x`, `192.168.x.x`).
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+## Contributing
 
 Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
 
@@ -433,13 +525,13 @@ Don't forget to give the project a star! Thanks again!
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## ©️ License
+## License
 
 Distributed under the Apache-2.0 license. See [LICENSE](LICENSE) for more information.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-## ⚠️ Legal Notice
+## Legal Notice
 
 Android is a trademark of Google LLC.
 
