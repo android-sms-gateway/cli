@@ -7,6 +7,7 @@ import (
 	"strings"
 
 	"github.com/android-sms-gateway/cli/internal/commands/flags"
+	"github.com/android-sms-gateway/cli/internal/commands/messages/providers"
 	"github.com/android-sms-gateway/cli/internal/core/codes"
 	"github.com/android-sms-gateway/cli/internal/utils/metadata"
 	"github.com/android-sms-gateway/client-go/smsgateway"
@@ -14,7 +15,10 @@ import (
 )
 
 func sendCmd() *cli.Command {
-	const defaultDataPort = 53739
+	const (
+		defaultDataPort = 53739
+		categoryMMS     = "MMS Message"
+	)
 
 	fl := []cli.Flag{
 		// Body fields
@@ -46,6 +50,24 @@ func sendCmd() *cli.Command {
 			Usage:    "Destination port for data message (1 to 65535)",
 			Value:    defaultDataPort,
 		},
+
+		// MMS Message
+		&cli.BoolFlag{
+			Name:     "mms",
+			Category: categoryMMS,
+			Usage:    "Send MMS message instead of text; text is optional when at least one attachment is provided",
+			Value:    false,
+		},
+		&cli.StringFlag{
+			Name:     "subject",
+			Category: categoryMMS,
+			Usage:    "MMS subject",
+		},
+		&cli.StringSliceFlag{
+			Name:     "attachment",
+			Category: categoryMMS,
+			Usage:    "Path to an attachment file, repeatable; MIME type is detected from the file extension",
+		},
 	}
 	fl = append(fl, flags.Send()...)
 
@@ -63,6 +85,25 @@ func sendCmd() *cli.Command {
 
 func sendBefore(c *cli.Context) error {
 	isDataMessage := c.Bool("data")
+	isMmsMessage := c.Bool("mms")
+
+	if isDataMessage && isMmsMessage {
+		return cli.Exit("--data and --mms are mutually exclusive", codes.ParamsError)
+	}
+
+	if isMmsMessage {
+		text := strings.TrimSpace(c.Args().Get(0))
+		if text == "" && len(c.StringSlice("attachment")) == 0 {
+			return cli.Exit("MMS message requires text or at least one attachment", codes.ParamsError)
+		}
+
+		return nil
+	}
+
+	if c.String("subject") != "" || len(c.StringSlice("attachment")) > 0 {
+		return cli.Exit("--subject and --attachment require --mms", codes.ParamsError)
+	}
+
 	if !isDataMessage {
 		return nil
 	}
@@ -87,7 +128,9 @@ func sendBefore(c *cli.Context) error {
 
 func sendAction(c *cli.Context) error {
 	msg := c.Args().Get(0)
-	if msg == "" {
+	isDataMessage := c.Bool("data")
+	isMmsMessage := c.Bool("mms")
+	if msg == "" && !isMmsMessage {
 		return cli.Exit("Message is empty", codes.ParamsError)
 	}
 
@@ -98,25 +141,12 @@ func sendAction(c *cli.Context) error {
 		return cli.Exit(err.Error(), codes.ParamsError)
 	}
 
-	isDataMessage := c.Bool("data")
-	var dataMessage *smsgateway.DataMessage
-	var textMessage *smsgateway.TextMessage
-	if isDataMessage {
-		dataMessage = &smsgateway.DataMessage{
-			Data: msg,
-			Port: uint16(c.Uint("data-port")), //nolint:gosec // validated
-		}
-	} else {
-		textMessage = &smsgateway.TextMessage{
-			Text: msg,
-		}
-	}
-
 	req := smsgateway.Message{
 		ID:           c.String("id"),
 		Message:      "",
-		TextMessage:  textMessage,
-		DataMessage:  dataMessage,
+		TextMessage:  nil,
+		DataMessage:  nil,
+		MmsMessage:   nil,
 		PhoneNumbers: c.StringSlice("phones"),
 		IsEncrypted:  false,
 
@@ -128,6 +158,23 @@ func sendAction(c *cli.Context) error {
 		ValidUntil:         nil,
 		ScheduleAt:         nil,
 	}
+
+	var provErr error
+	switch {
+	case isDataMessage:
+		p := providers.DataContentProvider{}
+		provErr = p.PrepareMessage(c, &req)
+	case isMmsMessage:
+		p := providers.MmsContentProvider{}
+		provErr = p.PrepareMessage(c, &req)
+	default:
+		p := providers.TextContentProvider{}
+		provErr = p.PrepareMessage(c, &req)
+	}
+	if provErr != nil {
+		return cli.Exit(provErr.Error(), codes.ParamsError)
+	}
+
 	req = sendFlags.Merge(req)
 
 	options := sendFlags.Option()

@@ -311,6 +311,7 @@ func sendWorker(
 				Text: row.Text,
 			},
 			DataMessage:        nil,
+			MmsMessage:         nil,
 			PhoneNumbers:       []string{row.Phone},
 			IsEncrypted:        false,
 			SimNumber:          row.SimNumber,
