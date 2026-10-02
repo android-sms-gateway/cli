@@ -77,7 +77,7 @@ There are two CLI tools in this repository:
 
 ### Prerequisites
 
-- Go 1.25+ (for building from source)
+- Go 1.26+ (for building from source)
 - Docker (optional, for containerized execution)
 
 ### Installation
