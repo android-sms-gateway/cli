@@ -1,181 +1,98 @@
-<!-- Improved compatibility of back to top link: See: https://github.com/othneildrew/Best-README-Template/pull/73 -->
-<a id="readme-top"></a>
-<!-- PROJECT SHIELDS -->
+# ⌨️ SMSGate CLI
+
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
-[![Stargazers][stars-shield]][stars-url]
+[![Stars][stars-shield]][stars-url]
 [![Issues][issues-shield]][issues-url]
-[![Apache-2.0 License][license-shield]][license-url]
+[![License][license-shield]][license-url]
 
-<br />
+A command-line interface for the SMS Gateway for Android API. Ships two binaries: `smsgate` (messages, webhooks, logs) and `smsgate-ca` (certificates for private deployments). Part of the SMSGate ecosystem - see the [CLI docs](https://docs.sms-gate.app/integration/cli/) for the full reference.
 
-<div align="center">
-  <h3 align="center">SMSGate CLI</h3>
+## 📖 About
 
-  <p align="center">
-    A command-line interface for interacting with the SMSGate API
-    <br />
-    <a href="https://docs.sms-gate.app/integration/cli/"><strong>Explore the docs »</strong></a>
-    <br />
-    <br />
-    <a href="https://github.com/android-sms-gateway/cli/issues/new?labels=bug">Report Bug</a>
-    ·
-    <a href="https://github.com/android-sms-gateway/cli/issues/new?labels=enhancement">Request Feature</a>
-  </p>
-</div>
+The CLI lets you automate SMS Gateway for Android without writing code: send messages (including batch operations from CSV and Excel files), manage webhooks, retrieve logs, and - via `smsgate-ca` - issue certificates for private server deployments. It can be used interactively or embedded in CI/CD pipelines, shell scripts, and cron jobs.
 
-<!-- TABLE OF CONTENTS -->
-- [About The Project](#about-the-project)
-  - [Built With](#built-with)
-- [Getting Started](#getting-started)
-  - [Prerequisites](#prerequisites)
-  - [Installation](#installation)
-    - [Option 1: Download from GitHub Releases](#option-1-download-from-github-releases)
-    - [Option 2: Install using Go](#option-2-install-using-go)
-    - [Option 3: Docker](#option-3-docker)
-- [Configuration](#configuration)
-  - [Available Options](#available-options)
-  - [Output Formats](#output-formats)
-- [Usage](#usage)
-  - [Commands](#commands)
-  - [Exit codes](#exit-codes)
-  - [Examples](#examples)
-    - [Sending messages](#sending-messages)
-    - [Batch message sending](#batch-message-sending)
-    - [Getting message status](#getting-message-status)
-    - [Managing webhooks](#managing-webhooks)
-    - [Getting logs](#getting-logs)
-    - [Output formats](#output-formats-1)
-- [Certificate Authority (smsgate-ca)](#certificate-authority-smsgate-ca)
-  - [Global Flags](#global-flags)
-  - [Commands](#commands-1)
-    - [`webhooks`](#webhooks)
-    - [`private`](#private)
-  - [Command Flags](#command-flags)
-- [Contributing](#contributing)
-- [License](#license)
-- [Legal Notice](#legal-notice)
+## 📚 Table of Contents
 
+- [📖 About](#-about)
+- [📚 Table of Contents](#-table-of-contents)
+- [⭐ Features](#-features)
+- [💻 Installation](#-installation)
+- [💻 Usage](#-usage)
+- [💻 Configuration](#-configuration)
+- [📚 Documentation](#-documentation)
+- [🤝 Contributing](#-contributing)
+- [⚖️ License](#️-license)
+- [📜 Legal Notice](#-legal-notice)
 
-<!-- ABOUT THE PROJECT -->
-## About The Project
+## ⭐ Features
 
-There are two CLI tools in this repository:
+- Send SMS to one or multiple recipients with delivery options: device and SIM selection, priority, TTL, scheduled delivery, delivery reports
+- Send MMS with subject and multiple attachments, and data messages with base64 payloads and custom destination ports
+- Batch sending from CSV and XLSX files with column mapping, dry-run and validate-only modes
+- Webhook management (register, list, delete) for event notifications
+- Log retrieval for arbitrary time ranges
+- Multiple output formats: `text`, `json`, `raw`, `table`
+- Certificate issuing for private server deployments via `smsgate-ca`
 
-- **`smsgate`** -- Interact with the [SMS Gateway for Android](https://sms-gate.app) API to send SMS/MMS messages, manage webhooks, and retrieve logs.
-- **`smsgate-ca`** -- Issue TLS certificates for private deployments (webhook receivers and private servers on RFC 1918 addresses).
+## 💻 Installation
 
-### Built With
-
-- [![Go][Go-shield]][Go-url]
-- [![Goreleaser][Goreleaser-shield]][Goreleaser-url]
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- GETTING STARTED -->
-## Getting Started
-
-### Prerequisites
-
-- Go 1.26+ (for building from source)
-- Docker (optional, for containerized execution)
-
-### Installation
-
-#### Option 1: Download from GitHub Releases
+### Option 1: Download from GitHub Releases
 
 1. Go to the [Releases page](https://github.com/android-sms-gateway/cli/releases/latest) of this repository.
-2. Download the appropriate binary for your operating system and architecture.
+2. Download the appropriate binary archive for your operating system and architecture. Each archive contains both `smsgate` and `smsgate-ca`.
 3. Extract the archive to a directory of your choice.
-4. Move the binary to a directory in your system's PATH.
+4. Move the binaries to a directory in your system's PATH.
 
-#### Option 2: Install using Go
+```bash
+curl -LO https://github.com/android-sms-gateway/cli/releases/latest/download/smsgate_Linux_x86_64.tar.gz
+tar -xzf smsgate_Linux_x86_64.tar.gz
+chmod +x smsgate smsgate-ca
+sudo mv smsgate smsgate-ca /usr/local/bin/
+```
+
+### Option 2: Install using Go
+
+Requires Go 1.26+ (for building from source). Make sure `$(go env GOPATH)/bin` is in your `PATH`.
 
 ```bash
 go install github.com/android-sms-gateway/cli/cmd/smsgate@latest
+go install github.com/android-sms-gateway/cli/cmd/smsgate-ca@latest
 ```
 
-This will download, compile, and install the latest version of the CLI tool. Make sure your Go bin directory is in your system's PATH.
+### Option 3: Docker
 
-#### Option 3: Docker
+Docker (optional, for containerized execution).
 
 ```bash
-docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli \
-  send --phone '+12025550123' 'Hello, Dr. Turk!'
+docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/smsgate \
+  send --phones '+12025550123' 'Hello, Dr. Turk!'
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Configuration
-
-The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables (loaded automatically via [godotenv](https://github.com/joho/godotenv)).
-
-### Available Options
-
-| Option             | Env Var        | Description      | Default value                          |
-| ------------------ | -------------- | ---------------- | -------------------------------------- |
-| `--endpoint`, `-e` | `ASG_ENDPOINT` | The endpoint URL | `https://api.sms-gate.app/3rdparty/v1` |
-| `--username`, `-u` | `ASG_USERNAME` | Your username    | **required**                           |
-| `--password`, `-p` | `ASG_PASSWORD` | Your password    | **required**                           |
-| `--format`, `-f`   | n/a            | Output format    | `text`                                 |
-
-### Output Formats
-
-The CLI supports four output formats:
-
-1. `text`: Human-readable text output (default)
-2. `json`: Pretty printed JSON-formatted output
-3. `raw`: One-line JSON-formatted output
-4. `table`: Tab-aligned columnar output for lists and sub-tables
-
-Please note that when the exit code is not `0`, the error description is printed to stderr without any formatting.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Usage
+## 💻 Usage
 
 ```bash
 smsgate [global options] command [command options] [arguments...]
 ```
 
-### Commands
-
-The CLI offers three main groups of commands:
-
-- **Messages**: Commands for sending SMS, MMS, and data messages, and checking their status, including batch operations from CSV and Excel files.
-- **Webhooks**: Commands for managing webhooks, including registering, listing, and deleting them.
-- **Logs**: Commands for retrieving logs for a specific time range.
+| Group    | Commands                                                        | Description                                     |
+| -------- | --------------------------------------------------------------- | ----------------------------------------------- |
+| Messages | `send`, `status` (alias: `state`), `batch send`                 | Send and track messages, bulk from CSV/XLSX     |
+| Webhooks | `webhooks register`, `webhooks list`, `webhooks delete`         | Register, audit, and remove webhook endpoints   |
+| Logs     | `logs` (alias: `log`)                                           | Retrieve logs for a specific time range         |
 
 For a complete list of available commands, you can:
 - Run `smsgate help` or `smsgate --help` in your terminal.
 - Visit the official documentation at [docs.sms-gate.app](https://docs.sms-gate.app/integration/cli/#commands).
 
-### Exit codes
+Credentials are read from environment variables (see Configuration); never put them on the command line.
 
-The CLI uses exit codes to indicate the outcome of operations:
-
-- `0`: success
-- `1`: invalid options or arguments
-- `2`: server request error
-- `3`: output formatting error
-- `4`: internal error
-
-### Examples
-
-For security reasons, it is recommended to pass credentials using environment variables or a `.env` file.
-
-Credentials can also be passed via CLI options:
-
-```bash
-smsgate -u <username> -p <password> send --phones '+12025550123' 'Hello, Dr. Turk!'
-```
-
-#### Sending messages
+### Sending messages
 
 The `send` command supports various options to customize message delivery:
 
 ```bash
-# Send a simple text message
+# Send a message
 smsgate send --phones '+12025550123' 'Hello, Dr. Turk!'
 
 # Send to multiple numbers
@@ -206,6 +123,9 @@ smsgate send --phones '+12025550123' --skip-phone-validation 'Message'
 
 # Filter by device activity (devices active within last 12 hours)
 smsgate send --phones '+12025550123' --device-active-within 12 'Message'
+
+# Schedule delivery (RFC3339 format)
+smsgate send --phones '+12025550123' --schedule-at '2026-12-31T23:59:59Z' 'Message'
 
 # Send data message (base64 encoded)
 echo -n 'hello world' | base64
@@ -256,7 +176,7 @@ smsgate send --mms --phones '+12025550123' --phones '+12025550124' \
 | `--device-active-within`    | Time window in hours for device activity filtering. `0` means no filtering.                                                                               | `0`           | `12`                    |
 | `--schedule-at`             | Schedule delivery time (RFC3339 format). If not provided, the message is sent immediately.<br>**Example:** `2026-12-31T23:59:59Z`.                        | immediate     | `2026-12-31T23:59:59Z`  |
 
-#### Batch message sending
+### Batch message sending
 
 The CLI supports sending messages in bulk from CSV and Excel files. The `batch send` command also supports the shared delivery/device options from `send` (such as `--device-id`, `--sim-number`, `--priority`, `--ttl`, `--valid-until`, `--delivery-report`, `--skip-phone-validation`, `--device-active-within`), allowing fine-grained control over each message in the batch.
 
@@ -267,8 +187,8 @@ The CLI supports sending messages in bulk from CSV and Excel files. The `batch s
 **Basic usage:**
 
 ```bash
-# Send messages from a CSV file
-smsgate batch send contacts.csv --map phone=Phone,text=Message
+# Batch send from a CSV file with column mapping
+smsgate batch send --map phone=Phone,text=Message contacts.csv
 
 # Send messages from an Excel file with specific sheet
 smsgate batch send campaign.xlsx --sheet Sheet1 --map phone=Phone,text=Message
@@ -322,28 +242,6 @@ smsgate batch send --header=false --map phone=col_1,text=col_2 data.csv
 smsgate batch send --map phone=Phone,text=Message,device_id=Device,sim_number=SIM,priority=Priority contacts.csv
 ```
 
-**File format examples:**
-
-**CSV with Headers:**
-```csv
-Phone,Message,Device,Priority
-+12025550123,"Hello Dr. Turk!",device1,1
-+12025550124,"Hello Dr. Smith!",device1,2
-+12025550125,"Hello Dr. Jones!",device2,1
-```
-
-**CSV without Headers:**
-```csv
-+12025550123,"Hello Dr. Turk!",device1,1
-+12025550124,"Hello Dr. Smith!",device1,2
-+12025550125,"Hello Dr. Jones!",device2,1
-```
-
-**Excel Files:**
-- Supports multiple sheets (use `--sheet` to specify)
-- First row treated as headers by default
-- Column mapping works the same as CSV
-
 **Workflow modes:**
 
 1. **Validation Only** - Validates file format and column mapping, checks required fields, exits without sending:
@@ -375,14 +273,14 @@ Phone,Message,Device,Priority
 4. Use `--continue-on-error` for non-critical bulk sends
 5. Combine with inherited message options (e.g., `--device-id`, `--priority`) for advanced scenarios
 
-#### Getting message status
+### Getting message status
 
 ```bash
-# Get the status of a sent message
+# Check delivery status
 smsgate status zXDYfTmTVf3iMd16zzdBj
 ```
 
-#### Managing webhooks
+### Managing webhooks
 
 ```bash
 # Register a webhook for SMS received events
@@ -400,7 +298,7 @@ smsgate webhooks delete <webhook-id>
 
 **Supported webhook events:** `sms:received`, `sms:sent`, `sms:failed`, `device:connected`, `device:disconnected`
 
-#### Getting logs
+### Getting logs
 
 The `logs` command retrieves logs for a specific time range. Dates should be in RFC3339 format (e.g., `2024-01-15T10:30:00Z`).
 
@@ -408,16 +306,16 @@ The `logs` command retrieves logs for a specific time range. Dates should be in 
 # Get logs for the last 24 hours (default)
 smsgate logs
 
-# Get logs for a specific time range
+# Fetch logs for a specific time range
 smsgate logs --from '2024-01-15T00:00:00Z' --to '2024-01-15T23:59:59Z'
 
 # Get logs with custom time range and output format
 smsgate --format json logs --from '2024-01-15T10:00:00+07:00' --to '2024-01-15T18:00:00+07:00'
 ```
 
-#### Output formats
+### Output formats
 
-**Text**
+**Text** (human-readable, default)
 
 ```text
 ID: zXDYfTmTVf3iMd16zzdBj
@@ -429,7 +327,7 @@ Recipients:
         +12025550124    Pending
 ```
 
-**JSON**
+**JSON** (pretty-printed)
 
 ```json
 {
@@ -451,94 +349,75 @@ Recipients:
 }
 ```
 
-**Raw**
+**Raw** (one-line JSON)
 
 ```json
 {"id":"zXDYfTmTVf3iMd16zzdBj","state":"Pending","isHashed":false,"isEncrypted":false,"recipients":[{"phoneNumber":"+12025550123","state":"Pending"},{"phoneNumber":"+12025550124","state":"Pending"}],"states":{}}
 ```
 
-**Table**
+**Table** (tab-aligned columnar output for lists)
 
 ```text
 ID                                    EVENT          URL                              DEVICE ID
 123e4567-e89b-12d3-a456-426614174000  sms:received   https://example.com/webhook      dev-abc
-def45678-e89b-12d3-a456-426614174000  sms:sent       https://example.com/other        
+def45678-e89b-12d3-a456-426614174000  sms:sent       https://example.com/other
 ```
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Certificate Authority (smsgate-ca)
-
-The `smsgate-ca` tool issues TLS certificates for private deployments. It generates ECDSA P-256 certificates signed by the SMS Gateway CA.
+### smsgate-ca
 
 ```bash
-smsgate-ca [global flags] <command> [command flags] [arguments]
+# Issue a certificate for a private server
+smsgate-ca private --out server.crt --keyout server.key 192.168.1.10
 ```
 
-### Global Flags
+The IP address must be a private one (RFC 1918, e.g. `10.x.x.x`, `172.16.x.x`, `192.168.x.x`).
 
-| Flag        | Aliases | Env Var          | Default | Description     |
-| ----------- | ------- | ---------------- | ------- | --------------- |
-| `--timeout` | `-t`    | `ASG_CA_TIMEOUT` | `30s`   | Request timeout |
+### Exit Codes
 
-### Commands
+| Code | Meaning                    |
+| ---- | -------------------------- |
+| `0`  | Success                    |
+| `1`  | Invalid options/arguments  |
+| `2`  | Server request error       |
+| `3`  | Output formatting error    |
+| `4`  | Internal error             |
 
-#### `webhooks`
+Errors are printed to stderr without formatting. Full command reference: [CLI docs](https://docs.sms-gate.app/integration/cli/).
 
-Issue a TLS certificate for a webhook receiver running on a private IP address.
+## 💻 Configuration
 
-```bash
-smsgate-ca webhooks <ip-address> --out server.crt --keyout server.key
-```
+The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables (loaded automatically via [godotenv](https://github.com/joho/godotenv)).
 
-#### `private`
+| Flag                    | Env Var          | Applies to   | Description                                                     | Default value                          |
+| ----------------------- | ---------------- | ------------ | --------------------------------------------------------------- | -------------------------------------- |
+| `--endpoint`, `-e`      | `ASG_ENDPOINT`   | `smsgate`    | The endpoint URL                                                | `https://api.sms-gate.app/3rdparty/v1` |
+| `--username`, `-u`      | `ASG_USERNAME`   | `smsgate`    | Your username                                                   | **required**                           |
+| `--password`, `-p`      | `ASG_PASSWORD`   | `smsgate`    | Your password                                                   | **required**                           |
+| `--format`, `-f`        | n/a              | `smsgate`    | Output format                                                   | `text`                                 |
+| `--timeout`, `-t`       | `ASG_CA_TIMEOUT` | `smsgate-ca` | Certificate polling deadline, checked between status requests   | `30s`                                  |
 
-Issue a TLS certificate for a private server running on a private IP address.
+Output formats: `text` (human-readable, default), `json` (pretty-printed), `raw` (one-line JSON), `table` (columnar output for lists).
 
-```bash
-smsgate-ca private <ip-address> --out server.crt --keyout server.key
-```
+`smsgate-ca` talks to the certificate authority at `https://ca.sms-gate.app/api/v1` and accepts no credentials; only `--timeout` is configurable.
 
-### Command Flags
+## 📚 Documentation
 
-| Flag       | Default      | Description             |
-| ---------- | ------------ | ----------------------- |
-| `--out`    | `server.crt` | Certificate output file |
-| `--keyout` | `server.key` | Private key output file |
+- [CLI reference](https://docs.sms-gate.app/integration/cli/)
+- [Central docs](https://docs.sms-gate.app/)
+- [GitHub repository](https://github.com/android-sms-gateway/cli)
 
-**Note:** The IP address must be a private/RFC 1918 address (e.g., `10.x.x.x`, `172.16.x.x`, `192.168.x.x`).
+## 🤝 Contributing
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+Contributions are welcome. Open an issue or pull request; follow the repo's `make fmt` / `make lint` / `make test` checks and the [contributing guidelines](https://docs.sms-gate.app/contributing/).
 
-## Contributing
+## ⚖️ License
 
-Contributions are what make the open source community such an amazing place to learn, inspire, and create. Any contributions you make are **greatly appreciated**.
+Apache-2.0. See [LICENSE](LICENSE).
 
-If you have a suggestion that would make this better, please fork the repo and create a pull request. You can also simply open an issue with the tag "enhancement".
-Don't forget to give the project a star! Thanks again!
-
-1. Fork the Project
-2. Create your Feature Branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your Changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the Branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## License
-
-Distributed under the Apache-2.0 license. See [LICENSE](LICENSE) for more information.
-
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-## Legal Notice
+## 📜 Legal Notice
 
 Android is a trademark of Google LLC.
 
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://www.markdownguide.org/basic-syntax/#reference-style-links -->
 [contributors-shield]: https://img.shields.io/github/contributors/android-sms-gateway/cli?style=for-the-badge
 [contributors-url]: https://github.com/android-sms-gateway/cli/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/android-sms-gateway/cli?style=for-the-badge
@@ -548,8 +427,4 @@ Android is a trademark of Google LLC.
 [issues-shield]: https://img.shields.io/github/issues/android-sms-gateway/cli?style=for-the-badge
 [issues-url]: https://github.com/android-sms-gateway/cli/issues
 [license-shield]: https://img.shields.io/github/license/android-sms-gateway/cli?style=for-the-badge
-[license-url]: https://github.com/android-sms-gateway/cli/blob/main/LICENSE
-[Go-shield]: https://img.shields.io/badge/Go-00ADD8?style=for-the-badge&logo=go&logoColor=white
-[Go-url]: https://go.dev
-[Goreleaser-shield]: https://img.shields.io/badge/Goreleaser-FF007A?style=for-the-badge&logo=goreleaser&logoColor=white
-[Goreleaser-url]: https://goreleaser.com
+[license-url]: https://github.com/android-sms-gateway/cli/blob/master/LICENSE
