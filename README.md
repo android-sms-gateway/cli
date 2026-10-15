@@ -65,7 +65,7 @@ go install github.com/android-sms-gateway/cli/cmd/smsgate-ca@latest
 Docker (optional, for containerized execution).
 
 ```bash
-docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/cli \
+docker run -it --rm --env-file .env ghcr.io/android-sms-gateway/smsgate \
   send --phones '+12025550123' 'Hello, Dr. Turk!'
 ```
 
@@ -327,7 +327,7 @@ Recipients:
         +12025550124    Pending
 ```
 
-**JSON** (pretty printed)
+**JSON** (pretty-printed)
 
 ```json
 {
@@ -367,8 +367,10 @@ def45678-e89b-12d3-a456-426614174000  sms:sent       https://example.com/other
 
 ```bash
 # Issue a certificate for a private server
-smsgate-ca private --out server.crt --keyout server.key 203.0.113.10
+smsgate-ca private --out server.crt --keyout server.key 192.168.1.10
 ```
+
+The IP address must be a private one (RFC 1918, e.g. `10.x.x.x`, `172.16.x.x`, `192.168.x.x`).
 
 ### Exit Codes
 
@@ -384,17 +386,19 @@ Errors are printed to stderr without formatting. Full command reference: [CLI do
 
 ## 💻 Configuration
 
-The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables (loaded automatically via [godotenv](https://github.com/joho/godotenv)). The `smsgate` and `smsgate-ca` binaries use the variables below.
+The CLI can be configured using environment variables or command-line flags. You can also use a `.env` file in the working directory to set these variables (loaded automatically via [godotenv](https://github.com/joho/godotenv)).
 
-| Flag                    | Env Var         | Description      | Default value                          |
-| ----------------------- | --------------- | ---------------- | -------------------------------------- |
-| `--endpoint`, `-e`      | `ASG_ENDPOINT`  | The endpoint URL | `https://api.sms-gate.app/3rdparty/v1` |
-| `--username`, `-u`      | `ASG_USERNAME`  | Your username    | **required**                           |
-| `--password`, `-p`      | `ASG_PASSWORD`  | Your password    | **required**                           |
-| `--format`, `-f`        | n/a             | Output format    | `text`                                 |
-| `--timeout`, `-t`       | `ASG_CA_TIMEOUT`| Request timeout  | `30s` (smsgate-ca only)                |
+| Flag                    | Env Var          | Applies to   | Description                                                     | Default value                          |
+| ----------------------- | ---------------- | ------------ | --------------------------------------------------------------- | -------------------------------------- |
+| `--endpoint`, `-e`      | `ASG_ENDPOINT`   | `smsgate`    | The endpoint URL                                                | `https://api.sms-gate.app/3rdparty/v1` |
+| `--username`, `-u`      | `ASG_USERNAME`   | `smsgate`    | Your username                                                   | **required**                           |
+| `--password`, `-p`      | `ASG_PASSWORD`   | `smsgate`    | Your password                                                   | **required**                           |
+| `--format`, `-f`        | n/a              | `smsgate`    | Output format                                                   | `text`                                 |
+| `--timeout`, `-t`       | `ASG_CA_TIMEOUT` | `smsgate-ca` | Certificate polling deadline, checked between status requests   | `30s`                                  |
 
-Output formats: `text` (human-readable, default), `json` (pretty printed), `raw` (one-line JSON), `table` (columnar output for lists).
+Output formats: `text` (human-readable, default), `json` (pretty-printed), `raw` (one-line JSON), `table` (columnar output for lists).
+
+`smsgate-ca` talks to the certificate authority at `https://ca.sms-gate.app/api/v1` and accepts no credentials; only `--timeout` is configurable.
 
 ## 📚 Documentation
 
@@ -404,7 +408,7 @@ Output formats: `text` (human-readable, default), `json` (pretty printed), `raw`
 
 ## 🤝 Contributing
 
-Contributions are welcome. Open an issue or pull request; follow the repo's `make fmt` / `make lint` / `make test` checks and the [README style guide](https://docs.sms-gate.app/).
+Contributions are welcome. Open an issue or pull request; follow the repo's `make fmt` / `make lint` / `make test` checks and the [contributing guidelines](https://docs.sms-gate.app/contributing/).
 
 ## ⚖️ License
 
@@ -414,7 +418,6 @@ Apache-2.0. See [LICENSE](LICENSE).
 
 Android is a trademark of Google LLC.
 
-<!-- Reference-style badge URLs: style=for-the-badge is mandatory -->
 [contributors-shield]: https://img.shields.io/github/contributors/android-sms-gateway/cli?style=for-the-badge
 [contributors-url]: https://github.com/android-sms-gateway/cli/graphs/contributors
 [forks-shield]: https://img.shields.io/github/forks/android-sms-gateway/cli?style=for-the-badge
@@ -424,4 +427,4 @@ Android is a trademark of Google LLC.
 [issues-shield]: https://img.shields.io/github/issues/android-sms-gateway/cli?style=for-the-badge
 [issues-url]: https://github.com/android-sms-gateway/cli/issues
 [license-shield]: https://img.shields.io/github/license/android-sms-gateway/cli?style=for-the-badge
-[license-url]: https://github.com/android-sms-gateway/cli/blob/main/LICENSE
+[license-url]: https://github.com/android-sms-gateway/cli/blob/master/LICENSE
